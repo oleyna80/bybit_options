@@ -1,0 +1,113 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                  ✅ OPTION QUOTES TOOLS - READY TO USE!                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📦 CREATED FILES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. get_option_quotes.py (Table Format - Recommended for traders)
+   ├─ Pretty-printed tables
+   ├─ Real-time Bybit API data
+   ├─ All metrics: Prices, Greeks, IV, Spreads, OI
+   └─ Usage: python get_option_quotes.py BTC-19DEC25-82000-P
+
+2. get_option_quotes_json.py (JSON Format - For automation)
+   ├─ Structured JSON output
+   ├─ Perfect for Python/Node scripts
+   ├─ Export to files
+   └─ Usage: python get_option_quotes_json.py BTC-19DEC25-82000-P
+
+3. OPTION_QUOTES_README.md (Full Documentation)
+4. USAGE_EXAMPLES.md (Trading Scenarios)
+5. OPTION_QUICK_START.py (Quick Reference)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 QUICK START - ONE COMMAND:
+
+  python get_option_quotes.py BTC-19DEC25-82000-P BTC-19DEC25-89000-C
+
+THIS WILL GET YOU:
+  ✓ Current Mark Price
+  ✓ Bid/Ask Prices & Spread
+  ✓ Implied Volatility (IV)
+  ✓ Greeks: Delta, Gamma, Vega, Theta
+  ✓ Open Interest & Liquidity
+  ✓ All data with timestamp
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 WHAT YOU GET:
+
+  | Option | Expiry | Mark | Bid | Ask | Spread | IV | Delta | Theta |
+  |--------|--------|------|-----|-----|--------|-------|-------|--------|
+  | P $82k | 19DEC  | $446 | $445| $455| 2.24%  | 55.3% | -0.18 | -175  |
+
+HOW TO READ IT:
+  • Mark = Fair value
+  • Bid = Price you SELL at
+  • Ask = Price you BUY at
+  • Spread = Your slippage cost
+  • IV = Volatility level (55% is high = expensive)
+  • Delta = -0.18 = Gains $18 per $100 BTC drop
+  • Theta = -$175/day = Daily decay cost
+
+HEDGE DECISION:
+  Buy at $445, protect your short position, costs $89 to hedge 0.2 units
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 YOUR USE CASES:
+
+  1. HEDGE (protect 0.2 ETH short):
+     python get_option_quotes.py BTC-19DEC25-82000-P
+
+  2. COMPARE (find best strike):
+     python get_option_quotes.py BTC-19DEC25-80000-P BTC-19DEC25-82000-P BTC-19DEC25-84000-P
+
+  3. SELL CALLS (collect premium):
+     python get_option_quotes.py BTC-19DEC25-87000-C BTC-19DEC25-89000-C
+
+  4. EXPORT (for analysis):
+     python get_option_quotes_json.py BTC-19DEC25-82000-P > quotes.json
+
+  5. MONITOR (daily):
+     python get_option_quotes.py BTC-19DEC25-82000-P BTC-19DEC25-89000-C
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ KEY FEATURES:
+
+  ✓ Uses existing BybitConnector (no new deps)
+  ✓ Real-time Bybit API data
+  ✓ Async fast execution
+  ✓ Clean table format for traders
+  ✓ JSON format for automation
+  ✓ All Greeks + Liquidity metrics
+  ✓ Automatic symbol formatting
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  YOUR PORTFOLIO STATUS (15 DEC):
+
+  • BTC Price: ~$86,000
+  • Positions: 0.2 ETH short (via ETHUSDT)
+  • Hedging: Need protective puts
+  • URGENT: 19DEC25 expires in 4 DAYS!
+
+RECOMMENDED ACTIONS:
+  python get_option_quotes.py BTC-19DEC25-82000-P    # Check hedge prices
+  python get_option_quotes.py BTC-19DEC25-89000-C    # Check call selling
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ YOU'RE ALL SET!
+
+Try your first command:
+
+  python get_option_quotes.py BTC-19DEC25-82000-P BTC-19DEC25-89000-C
+
+Then read:
+  - OPTION_QUOTES_README.md (full docs)
+  - USAGE_EXAMPLES.md (trading scenarios)
+  - OPTION_QUICK_START.py (quick reference)

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Integration Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        // Simple test to verify API connectivity
+        async function testAPI() {
+            try {
+                const positionsResponse = await fetch('http://localhost:8000/api/v1/positions');
+                const positionsData = await positionsResponse.json();
+                console.log('Positions API:', positionsData.count, 'positions');
+                
+                const portfolioResponse = await fetch('http://localhost:8000/api/v1/risk/portfolio');
+                const portfolioData = await portfolioResponse.json();
+                console.log('Portfolio API:', portfolioData.total_vega_usd, 'vega');
+                
+                const optionsResponse = await fetch('http://localhost:8000/api/v1/options-board?base_coin=BTC');
+                const optionsData = await optionsResponse.json();
+                console.log('Options API:', optionsData.options.length, 'options');
+                
+                document.getElementById('root').innerHTML = 
+                    `<h2>API Integration Test Results</h2>
+                    <p>Positions: ${positionsData.count} positions loaded</p>
+                    <p>Portfolio: Vega = $${portfolioData.total_vega_usd.toFixed(2)}</p>
+                    <p>Options: ${optionsData.options.length} options available</p>
+                    <p style="color: green; font-weight: bold;">✅ All APIs working correctly!</p>`;
+            } catch (error) {
+                console.error('API test failed:', error);
+                document.getElementById('root').innerHTML = 
+                    `<h2 style="color: red;">API Integration Test Failed</h2>
+                    <p>${error.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

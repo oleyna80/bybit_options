@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: bybit_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      BYBIT_API_KEY: ${BYBIT_API_KEY}
+      BYBIT_API_SECRET: ${BYBIT_API_SECRET}
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://quant:secure_password@timescaledb:5432/bybit_data
+      PYTHONUNBUFFERED: 1
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    networks:
+      - bybit_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend Application Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bybit_frontend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      VITE_API_URL: http://localhost:8000/api/v1
+      NODE_ENV: development
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - bybit_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Service
+  redis:
+    image: redis:7-alpine
+    container_name: bybit_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bybit_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
+  # TimescaleDB Service
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    container_name: bybit_db
+    restart: always
+    environment:
+      POSTGRES_USER: quant
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: bybit_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bybit_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quant -d bybit_data"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  bybit_network:
+    driver: bridge

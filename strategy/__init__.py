@@ -1,0 +1,2 @@
+"""Sigma-Fractal strategy package."""
+

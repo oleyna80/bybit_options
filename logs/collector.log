@@ -1,0 +1,6 @@
+INFO:__main__:Starting DVOL collection loop every 3600 seconds
+INFO:__main__:DVOL snapshot saved: {'dvol': 40.94580907055143, 'ivr': -10.477323621440828, 'timestamp': '2025-12-28T15:39:18.554948+00:00'}
+INFO:__main__:DVOL snapshot saved: {'dvol': 40.936958727516036, 'ivr': -32.603181209918816, 'timestamp': '2025-12-28T16:33:51.870225+00:00'}
+INFO:__main__:DVOL snapshot saved: {'dvol': 40.937064834309794, 'ivr': -5.870331380406879, 'timestamp': '2025-12-28T17:28:25.275572+00:00'}
+INFO:__main__:DVOL snapshot saved: {'dvol': 40.938564584441195, 'ivr': -2.8708311176044212, 'timestamp': '2025-12-28T18:22:58.097999+00:00'}
+INFO:__main__:DVOL snapshot saved: {'dvol': 40.94716147150593, 'ivr': 14.3229430118611, 'timestamp': '2025-12-28T19:17:31.447489+00:00'}
