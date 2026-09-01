@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import AsyncSessionLocal
-from data_models import PerpetualOHLCV, IVRankDaily
+from bybit_options.models import PerpetualOHLCV, IVRankDaily
 
 
 class IVRankService:

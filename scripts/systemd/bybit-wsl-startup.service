@@ -1,0 +1,15 @@
+[Unit]
+Description=Bybit Options WSL startup (trade sync + portfolio snapshots)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/dmitrii/projects/bybit_options
+EnvironmentFile=/home/dmitrii/projects/bybit_options/.env
+Environment=PYTHON_BIN=/home/dmitrii/projects/bybit_options/.venv/bin/python
+ExecStart=/bin/bash /home/dmitrii/projects/bybit_options/scripts/wsl_startup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

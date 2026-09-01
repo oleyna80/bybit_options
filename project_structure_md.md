@@ -5,43 +5,409 @@
 ```
 bybit-options-risk-engine/
 │
-├── .env                          # Environment variables (NEVER commit!)
-├── .gitignore                    # Git ignore rules
-├── requirements.txt              # Python dependencies
-├── README.md                     # User documentation
-├── PROJECT_STRUCTURE.md          # This file - architecture guide
+├── Configuration & Setup
+│   ├── .env                          # Environment variables (NEVER commit!)
+│   ├── .env.example                  # Example environment variables
+│   ├── .gitignore                    # Git ignore rules
+│   ├── requirements.txt              # Python dependencies
+│   ├── requirements.lock.txt         # Locked versions
+│   ├── package.json                  # Frontend/Node dependencies
+│   └── docker-compose.yml            # Docker multi-container setup
 │
-├── config.py                     # Centralized configuration
-├── bybit_connector.py            # Async Bybit API client
-├── data_models.py                # Pydantic data models
-├── market_data_service.py        # Data fetching layer
-├── risk_engine.py                # Pure business logic
-├── analysis_orchestrator.py      # Workflow coordinator
-├── display_manager.py            # Console output formatter
+├── Documentation
+│   ├── README.md                     # Main user documentation (legacy)
+│   ├── readme_md.md                  # Current main documentation
+│   ├── INTEGRATION.md                # Integration guide
+│   ├── AGENTS.md                     # Agent orchestration protocol
+│   ├── project_structure_md.md       # This file - architecture guide
+│   ├── CHANGELOG.md                  # Version history
+│   └── Various analysis reports/     # DEBUG_*, REVIEW_*, STATUS_* reports
 │
-├── main.py                       # CLI entry point
-└── api_example.py                # FastAPI REST API example
+├── Entry Points
+│   ├── main.py                       # CLI entry point (backward compatible)
+│   ├── api_example.py                # API entry point (backward compatible)
+│   └── apps/
+│       ├── cli.py                    # CLI router (calls bybit_options.cli.main)
+│       └── api.py                    # API router (calls bybit_options.api.app)
+│
+├── Core Application
+│   └── bybit_options/
+│       ├── __init__.py
+│       ├── api/                      # FastAPI app + REST routes
+│       │   ├── __init__.py
+│       │   ├── app.py                # FastAPI application instance
+│       │   └── routes.py             # API endpoints (/api/v1/...)
+│       ├── cli/                      # CLI implementation
+│       │   ├── __init__.py
+│       │   └── main.py               # CLI command handlers
+│       ├── config/                   # Settings & logging
+│       │   ├── __init__.py
+│       │   ├── settings.py           # Settings dataclass
+│       │   └── logging.py            # Logging configuration
+│       ├── core/                     # Business logic (pure functions)
+│       │   ├── __init__.py
+│       │   └── risk_engine.py        # RiskEngine with static methods
+│       ├── models/                   # Pydantic data models
+│       │   ├── __init__.py
+│       │   └── *.py                  # GreeksModel, PositionModel, etc.
+│       ├── orchestration/            # Workflow coordination
+│       │   ├── __init__.py
+│       │   └── analysis_orchestrator.py  # Main analysis pipeline
+│       ├── reports/                  # Display & report formatting
+│       │   ├── __init__.py
+│       │   └── display_manager.py    # Console output & Markdown reports
+│       ├── services/                 # External integrations
+│       │   ├── __init__.py
+│       │   ├── bybit_connector.py    # Bybit API client (async)
+│       │   └── market_data_service.py    # Data fetching & caching
+│       ├── storage/                  # Data persistence layer
+│       │   ├── __init__.py
+│       │   └── *.py                  # Database adapters, storage interfaces
+│       └── utils/                    # Utility functions
+│           ├── __init__.py
+│           └── helpers.py            # Common utilities
+│
+├── Database & Migration
+│   ├── database.py                   # Database connection (legacy)
+│   ├── database_schema.sql           # SQL schema definition
+│   └── migrations/                   # Alembic migration scripts
+│
+├── Scripts & Tools
+│   ├── scripts/                      # Utility scripts
+│   ├── tests/                        # Test suite
+│   ├── startup.sh                    # Server startup script
+│   ├── monitor_health.sh             # Health check script
+│   └── check_infra.py                # Infrastructure verification
+│
+├── Agent Framework
+│   ├── .agent/                       # Agent orchestration configs
+│   │   ├── PROJECT_BRIEF.md          # Project brief for agents
+│   │   ├── conventions.md            # Coding conventions
+│   │   └── workflow/                 # Workflow definitions
+│   ├── .memory_bank/                 # Agent memory (context persistence)
+│   │   ├── productContext.md         # Product state
+│   │   └── activeContext.md          # Current task state
+│   └── agreements/                   # Agent routing & permissions
+│       ├── 00-routing.md             # Request routing rules
+│       ├── 10-model-routing.md       # Model selection rules
+│       ├── 11-auto-context.md        # Context rules
+│       └── 20-permissions.md         # Permission gates
+│
+├── Development & Analysis
+│   ├── logs/                         # Application logs
+│   ├── reports/                      # Generated reports
+│   ├── artifacts/                    # Task cards & execution logs
+│   ├── docs/                         # Additional documentation
+│   ├── plans/                        # Planning documents
+│   ├── strategy/                     # Strategy definitions
+│   ├── frontend/                     # Web UI (if present)
+│   └── screenshots/                  # UI screenshots & demos
+│
+├── Legacy & Analysis Tools
+│   ├── analysis_orchestrator.py      # Legacy (see bybit_options/orchestration/)
+│   ├── bybit_connector.py            # Legacy (see bybit_options/services/)
+│   ├── market_data_service.py        # Legacy (see bybit_options/services/)
+│   ├── risk_engine.py                # Legacy (see bybit_options/core/)
+│   ├── display_manager.py            # Legacy (see bybit_options/reports/)
+│   ├── data_models.py                # Legacy (see bybit_options/models/)
+│   ├── config.py                     # Legacy (see bybit_options/config/)
+│   └── *_calculator.py, *_analyzer.py    # Various analysis scripts
+│
+└── Docker
+    └── Dockerfile.backend            # Docker build for API server
 ```
 
 ---
 
-## 🏗️ Architecture Layers
+## ⚠️ Important Notes
 
-### Layer 1: Configuration (`config.py`)
+### Active Code Location
+- ✅ **Current**: `bybit_options/` package
+- ⚠️ **Legacy**: Root-level Python files (for backward compatibility)
+- 🚀 **Recommended**: Use imports from `bybit_options.*`
+
+### Agent Framework
+- The project uses a **Workspace Orchestrator** protocol (see `AGENTS.md`)
+- Agent configs in `.agent/` define routing and workflows
+- Memory bank in `.memory_bank/` tracks project state across sessions
+
+---
+
+## 📂 Detailed Substructure
+
+### `bybit_options/api/`
+**Purpose**: FastAPI application and REST endpoints
+
+```
+api/
+├── __init__.py
+├── app.py                    # FastAPI application instance
+└── routes.py                 # All API endpoints
+```
+
+**Key Endpoints**:
+- `GET /api/v1/risk/portfolio` — Full portfolio analysis
+- `GET /api/v1/risk/coin/{coin}` — Per-coin risk metrics
+- `GET /api/v1/margin` — Account margin information
+- `GET /api/v1/positions` — All positions with Greeks
+- `POST /api/v1/report/generate` — Generate Markdown report
+
+---
+
+### `bybit_options/cli/`
+**Purpose**: Command-line interface commands
+
+```
+cli/
+├── __init__.py
+└── main.py                   # CLI command handlers
+```
+
+**Key Commands**:
+- `portfolio` — Show portfolio summary
+- `coin {symbol}` — Show coin-specific risk
+- `report` — Generate Markdown report
+- `monitor` — Real-time monitoring
+
+---
+
+### `bybit_options/config/`
+**Purpose**: Configuration and logging setup
+
+```
+config/
+├── __init__.py
+├── settings.py               # Settings dataclass with defaults
+└── logging.py                # Logging configuration
+```
+
+**Configuration Sources** (in priority order):
+1. Environment variables (`.env`)
+2. Settings dataclass defaults
+3. CLI arguments (optional)
+
+---
+
+### `bybit_options/core/`
+**Purpose**: Pure business logic (no I/O)
+
+```
+core/
+├── __init__.py
+└── risk_engine.py            # RiskEngine with static methods
+```
+
+**Guarantees**:
+- ✅ No database calls
+- ✅ No API calls
+- ✅ No file I/O
+- ✅ Deterministic (same input = same output)
+- ✅ Fully testable in isolation
+
+---
+
+### `bybit_options/models/`
+**Purpose**: Type-safe Pydantic models
+
+```
+models/
+├── __init__.py
+├── greeks.py                 # GreeksModel (Delta, Gamma, Vega, Theta)
+├── position.py               # PositionModel (complete position with Greeks)
+├── risk.py                   # CoinRiskModel, PortfolioRiskModel
+├── margin.py                 # MarginModel (account margin metrics)
+└── ...                       # Other domain models
+```
+
+**Key Models**:
+- `GreeksModel`: Greek letters (δ, γ, ν, θ)
+- `PositionModel`: Single option position with all metrics
+- `CoinRiskModel`: Aggregated risk per coin
+- `PortfolioRiskModel`: Complete portfolio snapshot
+
+---
+
+### `bybit_options/orchestration/`
+**Purpose**: Workflow coordination
+
+```
+orchestration/
+├── __init__.py
+└── analysis_orchestrator.py  # AnalysisOrchestrator (main workflow)
+```
+
+**Main Method**:
+```python
+async def run_full_analysis(self) -> PortfolioRiskModel:
+    """
+    Complete analysis pipeline:
+    1. Fetch positions
+    2. Fetch margin info
+    3. Fetch market data (parallel)
+    4. Calculate Greeks (RiskEngine)
+    5. Build portfolio model
+    6. Generate warnings
+    7. Return PortfolioRiskModel
+    """
+```
+
+---
+
+### `bybit_options/reports/`
+**Purpose**: Display and report generation
+
+```
+reports/
+├── __init__.py
+└── display_manager.py        # DisplayManager (console + Markdown output)
+```
+
+**Output Formats**:
+- Console tables (ANSI colors)
+- Markdown reports (AI-friendly)
+- JSON (API responses)
+
+---
+
+### `bybit_options/services/`
+**Purpose**: External integrations
+
+```
+services/
+├── __init__.py
+├── bybit_connector.py        # BybitConnector (HTTP client)
+└── market_data_service.py    # MarketDataService (data orchestration)
+```
+
+**BybitConnector**: 
+- Low-level async HTTP client
+- Rate limiting
+- Signature generation
+- Connection pooling
+
+**MarketDataService**:
+- High-level data fetching
+- Request caching
+- Parallel data loading
+- Business-friendly interface
+
+---
+
+### `bybit_options/storage/`
+**Purpose**: Data persistence adapters
+
+```
+storage/
+├── __init__.py
+├── base.py                   # Storage interface (ABC)
+├── sql_adapter.py            # SQLAlchemy adapter
+├── redis_adapter.py          # Redis adapter (optional)
+└── file_adapter.py           # File-based storage (optional)
+```
+
+---
+
+### `bybit_options/utils/`
+**Purpose**: Shared utility functions
+
+```
+utils/
+├── __init__.py
+├── helpers.py                # Common utilities
+├── formatters.py             # Data formatting helpers
+└── validators.py             # Input validation helpers
+```
+
+---
+
+### `docs/`, `plans/`, `reports/`
+**Purpose**: Documentation and planning
+
+```
+docs/
+├── .active_ticket            # Current active task
+├── prd/                      # Product requirement documents
+├── plan/                     # Technical planning
+└── tasklist/                 # Task checklists
+
+plans/                         # High-level planning documents
+
+reports/                       # Generated analysis reports
+├── risk_analysis_*.md        # Timestamped risk reports
+└── latest_analysis.md        # Latest report (updated)
+```
+
+---
+
+### `.agent/` and `.memory_bank/`
+**Purpose**: Agent orchestration framework
+
+```
+.agent/
+├── PROJECT_BRIEF.md          # Project overview for agents
+├── conventions.md            # Coding conventions for agents
+└── workflow/
+    └── bybit_options_workflow.md  # Workflow definition
+
+.memory_bank/
+├── productContext.md         # Product state & architecture
+├── activeContext.md          # Current work context
+└── progress.md               # Task progress tracking
+```
+
+**When to update Memory Bank**:
+- After major architectural changes
+- When starting new feature work
+- Before switching between tasks
+- At end of session (save state)
+
+---
+
+### `tests/`
+**Purpose**: Test suite
+
+```
+tests/
+├── __init__.py
+├── conftest.py               # Pytest fixtures
+├── test_risk_engine.py       # Risk engine tests
+├── test_orchestrator.py      # Orchestrator tests
+├── test_services.py          # Services tests
+└── fixtures/
+    └── *.json                # Mock API responses
+```
+
+---
+
+### Root-level Legacy Files
+⚠️ **Deprecated** — Use `bybit_options/` package instead
+
+```
+analysis_orchestrator.py  →  bybit_options/orchestration/
+bybit_connector.py        →  bybit_options/services/
+market_data_service.py    →  bybit_options/services/
+risk_engine.py            →  bybit_options/core/
+display_manager.py        →  bybit_options/reports/
+data_models.py            →  bybit_options/models/
+config.py                 →  bybit_options/config/
+```
+
+**Migration**: The new package structure is active. Legacy files remain for backward compatibility but should not be modified.
+
+### Layer 1: Configuration (`bybit_options/config`)
 **Purpose**: Centralize all settings and environment variables
 
-**Key Classes**:
-- `AppConfig`: Main configuration
-- `BybitConfig`: API credentials
-- `AnalysisConfig`: Risk thresholds
+**Key Components**:
+- `Settings` (dataclass) in `bybit_options/config/settings.py`
+- `configure_logging()` in `bybit_options/config/logging.py`
 
-**Dependencies**: None (pure Pydantic)
+**Dependencies**: stdlib only (`dataclasses`, `os`, `logging`)
 
 **Used By**: All modules
 
 ---
 
-### Layer 2: Data Models (`data_models.py`)
+### Layer 2: Data Models (`bybit_options/models`)
 **Purpose**: Type-safe data structures for the entire system
 
 **Key Classes**:
@@ -63,7 +429,7 @@ bybit-options-risk-engine/
 
 ---
 
-### Layer 3: API Connector (`bybit_connector.py`)
+### Layer 3: API Connector (`bybit_options/services/bybit_connector.py`)
 **Purpose**: Low-level async HTTP client for Bybit API
 
 **Key Classes**:
@@ -89,7 +455,7 @@ async with BybitConnector(api_key, api_secret) as connector:
 
 ---
 
-### Layer 4: Market Data Service (`market_data_service.py`)
+### Layer 4: Market Data Service (`bybit_options/services/market_data_service.py`)
 **Purpose**: High-level data fetching with caching
 
 **Key Classes**:
@@ -115,7 +481,7 @@ async with BybitConnector(api_key, api_secret) as connector:
 
 ---
 
-### Layer 5: Risk Engine (`risk_engine.py`)
+### Layer 5: Risk Engine (`bybit_options/core/risk_engine.py`)
 **Purpose**: Pure business logic - ZERO I/O
 
 **Key Classes**:
@@ -129,7 +495,7 @@ async with BybitConnector(api_key, api_secret) as connector:
 - `build_portfolio_risk()`: Portfolio construction
 - `generate_warnings()`: Risk alerts
 
-**Dependencies**: `data_models` only
+**Dependencies**: `bybit_options.models` only
 
 **Used By**: `AnalysisOrchestrator`
 
@@ -140,7 +506,7 @@ async with BybitConnector(api_key, api_secret) as connector:
 
 ---
 
-### Layer 6: Orchestrator (`analysis_orchestrator.py`)
+### Layer 6: Orchestrator (`bybit_options/orchestration/analysis_orchestrator.py`)
 **Purpose**: Coordinate the complete analysis workflow
 
 **Key Classes**:
@@ -163,11 +529,11 @@ async with BybitConnector(api_key, api_secret) as connector:
 
 **Dependencies**: All services
 
-**Used By**: CLI (`main.py`) or API (`api_example.py`)
+**Used By**: CLI (`apps/cli.py`) or API (`apps/api.py`)
 
 ---
 
-### Layer 7: Display (`display_manager.py`)
+### Layer 7: Display (`bybit_options/reports/display_manager.py`)
 **Purpose**: Console output formatting and report generation
 
 **Key Classes**:
@@ -205,9 +571,9 @@ def save_report_to_markdown(
     """
 ```
 
-**Dependencies**: `data_models`, `os`, `shutil`, `datetime`
+**Dependencies**: `bybit_options.models`, `os`, `shutil`, `datetime`
 
-**Used By**: `main.py` (CLI mode)
+**Used By**: `apps/cli.py` (CLI mode)
 
 **Features**:
 - ✅ Beautiful Markdown formatting with emojis
@@ -253,7 +619,7 @@ def save_report_to_markdown(
 
 ### Layer 8: Entry Points
 
-#### CLI Mode (`main.py`)
+#### CLI Mode (`apps/cli.py`)
 ```
 User → main() → Orchestrator → Display
 ```
@@ -265,7 +631,7 @@ User → main() → Orchestrator → Display
 - Testing
 - Debugging
 
-#### API Mode (`api_example.py`)
+#### API Mode (`bybit_options/api/app.py`)
 ```
 HTTP Request → FastAPI → Orchestrator → JSON Response
 ```
@@ -291,7 +657,7 @@ HTTP Request → FastAPI → Orchestrator → JSON Response
      │
      ▼
 ┌─────────────────────────┐
-│  main.py / API          │
+│  apps/cli.py / API      │
 │  (Entry Point)          │
 └────┬────────────────────┘
      │
@@ -501,7 +867,7 @@ python main.py
 
 ### Production API
 ```bash
-gunicorn api_example:app \
+gunicorn bybit_options.api.app:app \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind 0.0.0.0:8000
@@ -513,7 +879,7 @@ FROM python:3.11-slim
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["uvicorn", "api_example:app", "--host", "0.0.0.0"]
+CMD ["uvicorn", "bybit_options.api.app:app", "--host", "0.0.0.0"]
 ```
 
 ---
@@ -522,7 +888,7 @@ CMD ["uvicorn", "api_example:app", "--host", "0.0.0.0"]
 
 ### Example: Add Historical Greeks Tracking
 
-1. **Data Model** (`data_models.py`):
+1. **Data Model** (`bybit_options/models`):
 ```python
 class GreeksSnapshot(BaseModel):
     timestamp: datetime
@@ -536,7 +902,7 @@ class StorageService:
         # PostgreSQL or Redis
 ```
 
-3. **Update Orchestrator** (`analysis_orchestrator.py`):
+3. **Update Orchestrator** (`bybit_options/orchestration/analysis_orchestrator.py`):
 ```python
 async def run_full_analysis(self):
     portfolio = ...
@@ -544,7 +910,7 @@ async def run_full_analysis(self):
     return portfolio
 ```
 
-4. **Add API Endpoint** (`api_example.py`):
+4. **Add API Endpoint** (`bybit_options/api/app.py`):
 ```python
 @app.get("/api/v1/history/{coin}")
 async def get_history(coin: str):

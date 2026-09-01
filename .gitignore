@@ -4,6 +4,29 @@ __pycache__/
 *.pyc
 .env
 .env.*
+*.pem
+*.key
+*.p12
+*.pfx
 node_modules/
 dist/
 build/
+
+# Local runtime data and generated trading artefacts
+logs/
+*.log
+*.bak
+*.db
+*.sqlite
+*.sqlite3
+bybit_option_fills_year.json
+frontend/bybit_option_fills_year.json
+reports/latest_analysis.md
+reports/risk_analysis_*.md
+
+# Agentic SDLC local operational state
+.agent/active-work-block.json
+.agent/critic-gate.md
+.agent/verification-gate.md
+.agent/project-config.md
+memory_bank/

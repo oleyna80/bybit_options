@@ -1,0 +1,12 @@
+[Unit]
+Description=Bybit Options portfolio snapshot timer
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=1h
+AccuracySec=5m
+Persistent=true
+Unit=bybit-portfolio-snapshot.service
+
+[Install]
+WantedBy=timers.target

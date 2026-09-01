@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 from option_board_utils import (
     generate_option_symbols,
     parse_option_symbol,

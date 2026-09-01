@@ -1,7 +1,7 @@
 import asyncio
 import os
 from dotenv import load_dotenv
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 
 async def test():
     load_dotenv()

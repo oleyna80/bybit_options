@@ -1,0 +1,407 @@
+# Machine-readable navigation registry for authority-bearing files and major zones.
+# Runtime implementation surfaces are conditional on .agent/bootstrap-profile.json.
+
+version: 8
+scope: generated_project
+project:
+  name: "Bybit Options"
+  slug: "bybit-options"
+  root: "/home/azur/Projects/WSL/projects/bybit_options"
+  framework_source:
+    repository: "oleyna80/agentic-sdlc-framework"
+    commit: "be988807c38543eb90a728fcb4349bc97dd5695a"
+    profile: "core"
+
+installation_profile:
+  state_file: .agent/bootstrap-profile.json
+  semantics: installation_composition_only
+  authority: none
+  health_check: scripts/bootstrap.sh
+  validator: scripts/validate-installation-profile.py
+  rules:
+    - selected_component_paths_must_exist_in_fresh_scaffold
+    - required_paths_must_match_expected_filesystem_kind
+    - known_unselected_component_paths_must_be_absent_in_fresh_scaffold
+    - blocked_default_work_block_must_validate_before_restore
+    - evaluation_contract_is_available_in_every_profile
+    - define_quality_contract_is_available_in_every_profile
+    - installation_does_not_grant_work_block_authority
+    - integration_activation_requires_separate_admission
+
+statuses:
+  normative: "governance, product, architecture, or policy source of truth"
+  derived: "artifact derived from approved normative intent"
+  evidence: "requirements-quality, critic, review, verification, evaluation, drift, integration, or closeout evidence"
+  runtime_adapter: "runtime-specific execution configuration or guidance"
+  integration_adapter: "optional plugin, MCP, external runtime, tool, or transport"
+  durable_reference: "evidence-backed engineering memory"
+  operational_log: "current or historical execution state; not normative"
+  generated: "tool-generated artifact; verify against current source"
+  conditional_generated: "installed only when selected by bootstrap profile"
+  local_state: "machine-local, private, credential, cache, or runtime state"
+  source: "project implementation or tests"
+
+authority_order:
+  product_and_delivery:
+    - explicit_owner_instruction_or_approved_change_request
+    - approved_specification
+    - accepted_architecture_decisions_and_external_contracts
+    - approved_implementation_and_evaluation_plans
+    - active_tasklist
+    - requirements_quality_review_and_define_consistency_evidence
+    - review_verification_evaluation_drift_and_closeout_reports
+    - durable_engineering_memory
+    - runtime_integration_operational_logs
+    - generated_and_external_reference_artifacts
+  agent_behavior:
+    - explicit_owner_instruction
+    - AGENTS.md
+    - governance_core
+    - active_work_block_scope_write_set_and_assurance_state
+    - canonical_sdlc_protocol
+    - installed_runtime_adapters
+    - admitted_integration_adapters
+    - operational_logs_and_generated_artifacts
+
+define_quality:
+  contract: governance/define-quality.md
+  requirements_review_directory: docs/reports/requirements/**
+  requirements_review_template: docs/templates/requirements-quality-review-template.md
+  traceable_tasklist_template: docs/templates/traceable-tasklist-template.md
+  validator: scripts/validate-define-traceability.py
+  evidence_boundary: requirements_and_cross_artifact_structure_only
+  source_write_authority: none
+  authority: none
+
+evaluation_assurance:
+  contract: governance/evaluation.md
+  plan_directory: docs/evals/**
+  report_directory: docs/reports/evaluations/**
+  validator: scripts/validate-evaluation.py
+  templates:
+    - docs/templates/evaluation-plan-template.json
+    - docs/templates/evaluation-report-template.json
+    - docs/templates/trajectory-event-template.json
+  evidence_boundary: observable_events_only
+  hidden_reasoning_required: false
+  authority: none
+
+repair_assurance:
+  mode: controlled_ndr_only
+  repair_record_template: docs/templates/repair-record-template.md
+  combined_assurance_template: docs/templates/combined-assurance-report-template.md
+  validator: scripts/repair-lifecycle.py
+  limits: {implementation_passes: 1, ndr_corrections: 1, stabilization_items: 3, stabilization_corrections: 2}
+  authority: none
+
+entries:
+  AGENTS.md:
+    role: project_operating_contract
+    status: normative
+    owner: owner
+    related: [governance/README.md, .agent/workflows/sdd-protocol.md, .agent/ROSTER.md]
+
+  PROJECT_MAP.md:
+    role: human_readable_project_map
+    status: normative
+    owner: architect
+
+  FILE_REGISTRY.yml:
+    role: machine_readable_navigation_registry
+    status: normative
+    owner: architect
+
+  .agent/bootstrap-profile.json:
+    role: resolved_installation_profile_components_skills_and_path_contract
+    status: generated
+    owner: tooling
+    authority: none
+
+  governance/**:
+    role: runtime_neutral_governance_core
+    status: normative
+    owner: architect
+    availability: always
+
+  governance/define-quality.md:
+    role: define_stage_clarification_requirements_quality_traceability_and_consistency_contract
+    status: normative
+    owner: architect
+    authority: define_quality_only_no_source_write_authority
+
+  governance/evaluation.md:
+    role: deterministic_output_and_observable_trajectory_evaluation_contract
+    status: normative
+    owner: architect
+    authority: assurance_only
+
+  .agent/ROSTER.md:
+    role: logical_role_and_skill_router
+    status: normative
+    owner: architect
+
+  .agent/workflows/sdd-protocol.md:
+    role: canonical_define_execute_assure_close_contract
+    status: normative
+    owner: architect
+
+  .agent/active-work-block.default.json:
+    role: portable_fail_closed_restore_default
+    status: normative
+    owner: orchestrator
+
+  .agent/active-work-block.json:
+    role: executable_work_block_source_write_integration_assurance_gate
+    status: operational_log
+    owner: orchestrator
+    authority: work_block_state
+
+  .agent/hooks/**:
+    role: provider_neutral_machine_gate_implementation
+    status: runtime_adapter
+    owner: maintainer
+    availability: always
+
+  .agent/critic-gate.md:
+    role: human_readable_critic_gate_compatibility_view
+    status: operational_log
+    owner: orchestrator
+
+  .agent/verification-gate.md:
+    role: human_readable_review_verification_evaluation_and_drift_gate_view
+    status: operational_log
+    owner: verifier
+
+  .agent/skills/**:
+    role: profile_selected_portable_skills
+    status: runtime_adapter
+    owner: architect
+    selection_source: .agent/bootstrap-profile.json
+
+  docs/specs/**:
+    role: approved_product_and_technical_specifications
+    status: normative
+    owner: architect
+
+  docs/architecture/**:
+    role: accepted_architecture_decisions_and_contracts
+    status: normative
+    owner: architect
+
+  docs/plans/**:
+    role: approved_implementation_plans_and_work_blocks
+    status: derived
+    owner: orchestrator
+
+  docs/tasklist/**:
+    role: active_task_decomposition
+    status: derived
+    owner: orchestrator
+
+  docs/evals/**:
+    role: approved_evaluation_plans_benchmarks_fixtures_and_observable_events
+    status: evidence
+    owner: verifier
+    restrictions: [no_hidden_reasoning, no_secrets, no_unredacted_protected_payloads]
+
+  docs/reports/**:
+    role: requirements_quality_critic_review_verification_evaluation_drift_integration_and_closeout_evidence
+    status: evidence
+    owner: verifier
+
+  docs/reports/requirements/**:
+    role: define_stage_requirements_quality_review_evidence
+    status: evidence
+    owner: reviewer
+    authority: none
+
+  docs/reports/evaluations/**:
+    role: output_and_observable_trajectory_evaluation_reports
+    status: evidence
+    owner: verifier
+
+  docs/templates/work-block-template.md:
+    role: portable_work_block_contract
+    status: normative
+    owner: orchestrator
+
+  docs/templates/verification-report-template.md:
+    role: verification_report_contract
+    status: normative
+    owner: verifier
+
+  docs/templates/requirements-quality-review-template.md:
+    role: define_stage_requirements_quality_review_contract
+    status: normative
+    owner: reviewer
+    authority: none
+
+  docs/templates/traceable-tasklist-template.md:
+    role: requirement_acceptance_task_traceability_contract
+    status: normative
+    owner: orchestrator
+
+  docs/templates/evaluation-plan-template.json:
+    role: evaluation_plan_schema_example
+    status: normative
+    owner: architect
+
+  docs/templates/evaluation-report-template.json:
+    role: evaluation_report_schema_example
+    status: normative
+    owner: verifier
+
+  docs/templates/trajectory-event-template.json:
+    role: observable_trajectory_event_schema_example
+    status: normative
+    owner: verifier
+
+  docs/templates/spec-drift-report-template.md:
+    role: specification_drift_report_contract
+    status: normative
+    owner: reviewer
+
+  docs/templates/closeout-report-template.md:
+    role: closeout_report_contract
+    status: normative
+    owner: orchestrator
+
+  docs/templates/repair-record-template.md:
+    role: controlled_ndr_repair_record_contract
+    status: normative
+    owner: orchestrator
+
+  docs/templates/combined-assurance-report-template.md:
+    role: independent_ndr_combined_review_and_verification_contract
+    status: normative
+    owner: verifier
+
+  scripts/repair-lifecycle.py:
+    role: fail_closed_ndr_repair_record_validator
+    status: normative
+    owner: maintainer
+
+  docs/templates/integration-admission-template.md:
+    role: integration_admission_trust_permission_and_evidence_contract
+    status: normative
+    owner: owner
+
+  docs/templates/repository-graph-opt-in-template.md:
+    role: optional_repository_graph_provider_local_state_binding_template
+    status: normative
+    owner: architect
+    authority: none_without_separate_owner_approved_admission
+
+  docs/engineering-memory/**:
+    role: durable_engineering_memory
+    status: durable_reference
+    owner: architect
+
+  docs/session-bootstrap.md:
+    role: new_session_intake_guidance
+    status: normative
+    owner: architect
+
+  runtimes/**:
+    role: runtime_capability_and_fallback_documentation
+    status: runtime_adapter
+    owner: architect
+    availability: always
+    note: documentation_presence_does_not_mean_runtime_surface_installed
+
+  integrations/**:
+    role: optional_external_capability_and_transport_documentation
+    status: integration_adapter
+    owner: architect
+    availability: always
+
+  integrations/repository-graph/README.md:
+    role: optional_provider_neutral_repository_graph_capability_boundary
+    status: normative
+    owner: architect
+    authority: none_without_separate_owner_approved_admission
+
+  .codex/**:
+    role: codex_project_runtime_configuration
+    status: conditional_generated
+    owner: orchestrator
+    selected_by_component: runtime:codex
+    authority: none_without_active_work_block
+
+  CLAUDE.md:
+    role: claude_code_runtime_entrypoint
+    status: conditional_generated
+    owner: maintainer
+    selected_by_component: runtime:claude-code
+
+  .claude/**:
+    role: claude_code_project_runtime_configuration
+    status: conditional_generated
+    owner: architect
+    selected_by_component: runtime:claude-code
+    authority: none_without_active_work_block
+
+  opencode.json:
+    role: opencode_project_instructions_permissions_and_inert_integrations
+    status: conditional_generated
+    owner: maintainer
+    selected_by_component: runtime:opencode
+
+  .opencode/agents/**:
+    role: opencode_logical_role_subagents
+    status: conditional_generated
+    owner: maintainer
+    selected_by_component: runtime:opencode
+
+  .mcp.json:
+    role: empty_opt_in_project_mcp_registry
+    status: conditional_generated
+    owner: owner
+    selected_by_component: integration:mcp-config
+    authority: none_until_exact_tool_admission
+
+  scripts/bootstrap.sh:
+    role: generated_project_profile_aware_health_check
+    status: normative
+    owner: verifier
+
+  scripts/validate-installation-profile.py:
+    role: generated_installation_profile_path_kind_blocked_default_and_evaluation_default_validator
+    status: normative
+    owner: verifier
+
+  scripts/validate-define-traceability.py:
+    role: generated_define_stage_requirement_acceptance_task_structural_validator
+    status: normative
+    owner: verifier
+    authority: assurance_only
+
+  scripts/validate-evaluation.py:
+    role: generated_evaluation_plan_report_and_closeout_validator
+    status: normative
+    owner: verifier
+    authority: assurance_only
+
+  memory_bank/**:
+    role: local_operational_context_and_logs
+    status: operational_log
+    owner: orchestrator
+
+  source_directories:
+    role: project_source_and_tests
+    status: source
+    owner: coder
+    patterns:
+      - "to be defined"
+
+  generated_outputs:
+    role: build_cache_and_discovery_artifacts
+    status: generated
+    owner: tooling
+    patterns: [node_modules/**, .next/**, dist/**, build/**, coverage/**, graphify-out/**]
+
+  local_secrets:
+    role: credentials_private_environment_and_runtime_state
+    status: local_state
+    owner: owner
+    patterns: [.env, .env.*, "*.pem", "*.key", secrets/**, credentials/**]

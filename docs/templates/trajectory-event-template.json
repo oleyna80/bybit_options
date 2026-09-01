@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "event_id": "replace-me",
+  "run_id": "replace-me",
+  "work_block_id": "wb-000",
+  "sequence": 1,
+  "timestamp": "2026-01-01T00:00:00Z",
+  "event_type": "tool_call",
+  "logical_role": "coder",
+  "runtime": "replace-me",
+  "tool": "replace-me",
+  "action": "replace-me",
+  "target": "replace-me",
+  "result": "observed",
+  "evidence": "replace-me",
+  "side_effect_class": "none",
+  "gate_decision": "not_applicable",
+  "notes": "Observable event summary only; do not include hidden reasoning or private chain-of-thought."
+}

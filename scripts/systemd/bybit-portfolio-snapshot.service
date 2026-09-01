@@ -1,0 +1,13 @@
+[Unit]
+Description=Bybit Options portfolio snapshot (one-shot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/dmitrii/projects/bybit_options
+EnvironmentFile=/home/dmitrii/projects/bybit_options/.env
+ExecStart=/home/dmitrii/projects/bybit_options/.venv/bin/python /home/dmitrii/projects/bybit_options/scripts/sync_portfolio.py --once
+
+[Install]
+WantedBy=default.target

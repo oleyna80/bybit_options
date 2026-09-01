@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "artifact_type": "evaluation_report",
+  "evaluation_id": "replace-me",
+  "status": "draft",
+  "work_block_id": "wb-000",
+  "plan_revision": "1",
+  "subject_revision": "replace-me",
+  "runtime": "replace-me",
+  "logical_role": "verifier",
+  "model_class": "replace-me",
+  "actual_model": "record-if-policy-allows",
+  "isolation": "replace-me",
+  "deterministic_results": [
+    {
+      "criterion_id": "deterministic-contract",
+      "state": "not_run",
+      "evidence": "replace-me",
+      "notes": ""
+    }
+  ],
+  "output_results": [
+    {
+      "criterion_id": "artifact-quality",
+      "state": "not_run",
+      "score": null,
+      "evaluator_type": "human",
+      "evidence": "replace-me",
+      "notes": ""
+    }
+  ],
+  "trajectory_results": [
+    {
+      "criterion_id": "required-checks-observed",
+      "state": "not_run",
+      "event_source": "replace-me",
+      "observed_events": [],
+      "missing_events": [],
+      "prohibited_events_observed": [],
+      "notes": ""
+    }
+  ],
+  "judge_evidence": [],
+  "aggregate": {
+    "blocking_failures": [],
+    "blocked_checks": [],
+    "inspection_gaps": [],
+    "verdict": "UNVERIFIED"
+  },
+  "residual_risks": [],
+  "completed_at": null
+}
