@@ -23,3 +23,10 @@ bybit_option_fills_year.json
 frontend/bybit_option_fills_year.json
 reports/latest_analysis.md
 reports/risk_analysis_*.md
+
+# Agentic SDLC local operational state
+.agent/active-work-block.json
+.agent/critic-gate.md
+.agent/verification-gate.md
+.agent/project-config.md
+memory_bank/

@@ -1,0 +1,94 @@
+{
+  "schema_version": 3,
+  "authority_mode": "github_capability",
+  "work_block_id": "",
+  "governance_profile": "Controlled",
+  "specification": {
+    "path": "",
+    "revision": ""
+  },
+  "base_commit": "",
+  "define_quality": {
+    "required": false,
+    "status": "PENDING",
+    "requirements_review": "",
+    "traceability": "",
+    "consistency_analysis": ""
+  },
+  "write_gate": {
+    "status": "BLOCKED",
+    "opened_at": null
+  },
+  "critic": {
+    "required": true,
+    "status": "PENDING",
+    "verdict": "PENDING",
+    "report": "",
+    "isolation": "unknown",
+    "skip_reason": ""
+  },
+  "assurance": {
+    "review": {
+      "required": true,
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
+      "skip_reason": ""
+    },
+    "verification": {
+      "required": true,
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
+      "skip_reason": ""
+    },
+    "evaluation": {
+      "required": false,
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "plan": "",
+      "report": "",
+      "rubric_revision": "",
+      "benchmark_revision": "",
+      "isolation": "unknown",
+      "skip_reason": ""
+    },
+    "drift": {
+      "required": false,
+      "status": "PENDING",
+      "verdict": "PENDING",
+      "report": "",
+      "isolation": "unknown",
+      "skip_reason": ""
+    }
+  },
+  "closeout_mode": "pending",
+  "integrations": {
+    "approved": [],
+    "admission_records": []
+  },
+  "write_set": [],
+  "coordination_write_set": [
+    ".agent/active-work-block.json",
+    ".agent/critic-gate.md",
+    ".agent/verification-gate.md",
+    ".codex/write-gate.md",
+    "docs/plans/**",
+    "docs/specs/**",
+    "docs/tasklist/**",
+    "docs/reports/**",
+    "docs/architecture/drafts/**",
+    "memory_bank/**"
+  ],
+  "external_hard_stops": [
+    "protected_default_branch_mutation",
+    "destructive",
+    "live_infra",
+    "live_data",
+    "credentials",
+    "client_communications",
+    "irreversible_publish"
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "artifact_type": "evaluation_plan",
+  "evaluation_id": "replace-me",
+  "status": "draft",
+  "work_block_id": "wb-000",
+  "revision": "1",
+  "subject": {
+    "objective": "Describe the behavior or artifact being evaluated.",
+    "specification_revision": "replace-me",
+    "frozen_revision": "replace-me"
+  },
+  "deterministic_checks": [
+    {
+      "criterion_id": "deterministic-contract",
+      "description": "Run the deterministic contract suite.",
+      "command": "replace-me",
+      "evidence": "replace-me",
+      "blocking": true
+    }
+  ],
+  "output_criteria": [
+    {
+      "criterion_id": "artifact-quality",
+      "description": "Score the final artifact against the approved requirement.",
+      "evaluator_type": "human",
+      "threshold": 1.0,
+      "weight": 1.0,
+      "blocking": true,
+      "evidence": "replace-me"
+    }
+  ],
+  "trajectory_requirements": [
+    {
+      "criterion_id": "required-checks-observed",
+      "description": "Required checks and gate events are present in observable evidence.",
+      "event_source": "replace-me",
+      "required_events": [
+        "work_block_bound",
+        "required_checks_completed"
+      ],
+      "prohibited_events": [
+        "unauthorized_side_effect"
+      ],
+      "blocking": true
+    }
+  ],
+  "benchmark_revision": "not-applicable",
+  "rubric_revision": "1",
+  "judge_policy": {
+    "lm_judge_allowed": false,
+    "judge_identity": "not-applicable",
+    "judge_prompt_revision": "not-applicable",
+    "can_override_deterministic": false,
+    "can_open_authority_gates": false
+  },
+  "isolation_requirement": "record-actual-boundary",
+  "aggregate_verdict_rule": "all_blocking_pass"
+}
