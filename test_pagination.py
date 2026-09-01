@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 from option_board_utils import parse_option_symbol # Добавляем импорт для парсинга символов
 
 # --- Настройка логирования для получения информации о пагинации ---

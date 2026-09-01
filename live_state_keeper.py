@@ -32,9 +32,9 @@ from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 
 from stream_manager import BybitStreamManager
-from market_data_service import MarketDataService
-from risk_engine import RiskEngine
-from data_models import (
+from bybit_options.services.market_data_service import MarketDataService
+from bybit_options.core.risk_engine import RiskEngine
+from bybit_options.models import (
     PortfolioRiskModel,
     PositionModel,
     CoinRiskModel,
@@ -203,7 +203,7 @@ class LiveStateKeeper:
                 try:
                     # This is a simplified version - in production you'd want to
                     # trigger a recalculation or use cached data
-                    from analysis_orchestrator import AnalysisOrchestrator
+                    from bybit_options.orchestration.analysis_orchestrator import AnalysisOrchestrator
                     orchestrator = AnalysisOrchestrator(self.market_data.connector)
                     portfolio = await orchestrator.run_full_analysis(fetch_enhanced_metrics=False)
                 except Exception as e:

@@ -10,7 +10,7 @@ from datetime import datetime
 from decimal import Decimal
 
 # Re-export existing enums for compatibility
-from data_models import PositionSide, OptionType, GreeksModel, PositionModel
+from bybit_options.models import PositionSide, OptionType, GreeksModel, PositionModel
 
 
 class StrategyType(str, Enum):

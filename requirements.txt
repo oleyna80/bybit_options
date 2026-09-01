@@ -2,7 +2,7 @@
 aiohttp==3.9.1
 
 # Data validation and serialization
-pydantic==2.5.3
+pydantic==2.12.5
 pydantic-settings==2.1.0
 
 # Environment variables
@@ -14,12 +14,15 @@ asyncpg==0.29.0
 sqlalchemy==2.0.25
 greenlet==3.0.3
 
+# Web API
+fastapi==0.128.0
+uvicorn[standard]==0.40.0
+
 # Optional dependencies (uncomment as needed)
 # pybit==5.6.0  # Alternative Bybit SDK
-# fastapi==0.108.0
-# uvicorn[standard]==0.25.0
 # pytest==7.4.3
 # pytest-asyncio==0.21.1
+
 # Data Processing for IV Rank
 pandas==2.1.4
 numpy==1.26.3
@@ -41,4 +44,4 @@ matplotlib==3.8.2
 seaborn==0.13.0
 
 # Strategy indicators
-scipy==1.11.0
+scipy==1.16.3

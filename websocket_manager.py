@@ -12,7 +12,7 @@ from enum import Enum
 import uuid
 
 from fastapi import WebSocket, WebSocketDisconnect
-from data_models import PortfolioRiskModel, PositionModel, MarginModel
+from bybit_options.models import PortfolioRiskModel, PositionModel, MarginModel
 
 logger = logging.getLogger(__name__)
 
@@ -499,7 +499,7 @@ if __name__ == "__main__":
     import sys
     sys.path.append(".")
     
-    from data_models import PortfolioRiskModel, MarginModel, CoinRiskModel, GreeksModel
+    from bybit_options.models import PortfolioRiskModel, MarginModel, CoinRiskModel, GreeksModel
     
     # Create test portfolio
     test_portfolio = PortfolioRiskModel(

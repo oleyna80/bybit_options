@@ -1,7 +1,7 @@
 // frontend/src/components/Charts/IVRankChart.tsx
 
-import React, { useEffect, useRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createChart, CandlestickSeries, IChartApi, ISeriesApi, LineSeries, UTCTimestamp } from 'lightweight-charts';
 import { fetchIVRankData, fetchPriceHistory, transformToCandlestickData, transformToLineData } from '../../services/ivRankApi';
 import type { CandlestickData, LineData } from '../../types/ivrank.types';
 
@@ -34,6 +34,9 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
   const priceChartRef = useRef<IChartApi | null>(null);
   const ivRankChartRef = useRef<IChartApi | null>(null);
 
+  const initializedRef = useRef<boolean>(false);
+  const resizeLogCountRef = useRef<number>(0);
+
   // Refs for series
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const ivRankSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
@@ -44,156 +47,225 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
   const [priceData, setPriceData] = useState<CandlestickData[]>([]);
   const [ivRankData, setIvRankData] = useState<LineData[]>([]);
 
-  // Main effect: Initialize charts and load data
+  useLayoutEffect(() => {
+    if (loading || error) {
+      return;
+    }
+
+    // Prevent double initialization
+    if (initializedRef.current) {
+      console.log('Already initialized');
+      return;
+    }
+
+    if (!priceChartContainerRef.current || !ivRankChartContainerRef.current) {
+      console.warn('Containers not found', {
+        loading,
+        error,
+        priceRef: priceChartContainerRef.current,
+        ivRef: ivRankChartContainerRef.current,
+      });
+      return;
+    }
+
+    const priceRect = priceChartContainerRef.current.getBoundingClientRect();
+    const ivRect = ivRankChartContainerRef.current.getBoundingClientRect();
+
+    console.log('📐 Init attempt sizes', {
+      loading,
+      error,
+      priceRect: { width: priceRect.width, height: priceRect.height, top: priceRect.top, left: priceRect.left },
+      ivRect: { width: ivRect.width, height: ivRect.height, top: ivRect.top, left: ivRect.left },
+    });
+
+    if (priceRect.width === 0 || priceRect.height === 0) {
+      console.warn('Zero size, retrying...');
+      return;
+    }
+
+    console.log('✅ Initializing charts');
+
+    // Define sync callbacks in outer scope so cleanup can unsubscribe them
+    let syncPriceToIv: (() => void) | null = null;
+    let syncIvToPrice: (() => void) | null = null;
+
+    try {
+      const priceChart = createChart(priceChartContainerRef.current, {
+        width: priceRect.width,
+        height: priceRect.height,
+        layout: {
+          background: { color: '#111827' },
+          textColor: '#e5e7eb',
+        },
+        grid: {
+          vertLines: { color: '#1f2937' },
+          horzLines: { color: '#1f2937' },
+        },
+        timeScale: {
+          borderColor: '#cccccc',
+          timeVisible: true,
+        },
+      });
+      priceChartRef.current = priceChart;
+
+      const candlestickSeries = priceChart.addSeries(CandlestickSeries, {
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+      candlestickSeriesRef.current = candlestickSeries;
+
+      const ivChart = createChart(ivRankChartContainerRef.current, {
+        width: ivRect.width,
+        height: ivRect.height,
+        layout: {
+          background: { color: '#111827' },
+          textColor: '#e5e7eb',
+        },
+        grid: {
+          vertLines: { color: '#1f2937' },
+          horzLines: { color: '#1f2937' },
+        },
+        timeScale: {
+          borderColor: '#cccccc',
+          visible: true,
+        },
+      });
+      ivRankChartRef.current = ivChart;
+
+      const ivRankSeries = ivChart.addSeries(LineSeries, {
+        color: '#2962FF',
+        lineWidth: 2,
+        priceFormat: {
+          type: 'custom',
+          formatter: (price: number) => `${price.toFixed(1)}%`,
+        },
+      });
+      ivRankSeriesRef.current = ivRankSeries;
+
+      syncPriceToIv = () => {
+        const priceChartInstance = priceChartRef.current;
+        const ivChartInstance = ivRankChartRef.current;
+        if (!ivChartInstance || !priceChartInstance) return;
+        const timeRange = priceChartInstance.timeScale().getVisibleRange();
+        if (timeRange && timeRange.from != null && timeRange.to != null) {
+          try {
+            ivChartInstance.timeScale().setVisibleRange(timeRange);
+          } catch (err) {
+            console.warn('syncPriceToIv failed', { timeRange, err });
+          }
+        }
+      };
+
+      syncIvToPrice = () => {
+        const priceChartInstance = priceChartRef.current;
+        const ivChartInstance = ivRankChartRef.current;
+        if (!ivChartInstance || !priceChartInstance) return;
+        const timeRange = ivChartInstance.timeScale().getVisibleRange();
+        if (timeRange && timeRange.from != null && timeRange.to != null) {
+          try {
+            priceChartInstance.timeScale().setVisibleRange(timeRange);
+          } catch (err) {
+            console.warn('syncIvToPrice failed', { timeRange, err });
+          }
+        }
+      };
+
+      priceChart.timeScale().subscribeVisibleTimeRangeChange(syncPriceToIv);
+      ivChart.timeScale().subscribeVisibleTimeRangeChange(syncIvToPrice);
+
+      initializedRef.current = true;
+      console.log('✅ Charts created successfully');
+    } catch (error) {
+      console.error('❌ Chart error:', error);
+    }
+
+    return () => {
+      console.log('Cleanup');
+      if (priceChartRef.current) {
+        if (syncPriceToIv) {
+          // Unsubscribe before removing charts to avoid callbacks firing on disposed charts
+          const priceTimeScale = priceChartRef.current.timeScale();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((priceTimeScale as any).unsubscribeVisibleTimeRangeChange) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (priceTimeScale as any).unsubscribeVisibleTimeRangeChange(syncPriceToIv);
+          }
+        }
+        priceChartRef.current.remove();
+        priceChartRef.current = null;
+      }
+      if (ivRankChartRef.current) {
+        if (syncIvToPrice) {
+          const ivTimeScale = ivRankChartRef.current.timeScale();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((ivTimeScale as any).unsubscribeVisibleTimeRangeChange) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (ivTimeScale as any).unsubscribeVisibleTimeRangeChange(syncIvToPrice);
+          }
+        }
+        ivRankChartRef.current.remove();
+        ivRankChartRef.current = null;
+      }
+      candlestickSeriesRef.current = null;
+      ivRankSeriesRef.current = null;
+      initializedRef.current = false;
+    };
+  }, [loading, error]);
+
   useEffect(() => {
-    let isMounted = true;
-    let priceChart: IChartApi | null = null;
-    let ivChart: IChartApi | null = null;
-    let candlestickSeries: ISeriesApi<'Candlestick'> | null = null;
-    let ivRankSeries: ISeriesApi<'Line'> | null = null;
-    let hasFittedContent = false; // Track if fitContent has been called
+    if (!priceChartContainerRef.current || !ivRankChartContainerRef.current) {
+      return;
+    }
 
-    const initializeCharts = () => {
-      // Check if containers exist
-      if (!priceChartContainerRef.current || !ivRankChartContainerRef.current) {
-        console.warn('Chart containers not found');
-        return false;
+    const handleResize = () => {
+      if (priceChartRef.current && priceChartContainerRef.current) {
+        const rect = priceChartContainerRef.current.getBoundingClientRect();
+        priceChartRef.current.applyOptions({
+          width: rect.width,
+          height: rect.height,
+        });
+        if (resizeLogCountRef.current < 5) {
+          resizeLogCountRef.current += 1;
+          console.log('📐 Resize price container', {
+            attempt: resizeLogCountRef.current,
+            rect: { width: rect.width, height: rect.height, top: rect.top, left: rect.left },
+            initialized: initializedRef.current,
+          });
+        }
       }
-
-      const priceContainer = priceChartContainerRef.current;
-      const ivContainer = ivRankChartContainerRef.current;
-
-      // Check if containers have valid dimensions
-      const priceWidth = priceContainer.clientWidth;
-      const priceHeight = priceContainer.clientHeight;
-      const ivWidth = ivContainer.clientWidth;
-      const ivHeight = ivContainer.clientHeight;
-
-      if (priceWidth === 0 || priceHeight === 0 || ivWidth === 0 || ivHeight === 0) {
-        console.warn('Chart containers have zero dimensions:', {
-          priceWidth,
-          priceHeight,
-          ivWidth,
-          ivHeight
+      if (ivRankChartRef.current && ivRankChartContainerRef.current) {
+        const rect = ivRankChartContainerRef.current.getBoundingClientRect();
+        ivRankChartRef.current.applyOptions({
+          width: rect.width,
+          height: rect.height,
         });
-        return false;
-      }
-
-      // Ensure minimum dimensions
-      const minWidth = 100;
-      const minHeight = 50;
-      
-      if (priceWidth < minWidth || priceHeight < minHeight ||
-          ivWidth < minWidth || ivHeight < minHeight) {
-        console.warn('Chart containers below minimum dimensions');
-        return false;
-      }
-
-      try {
-        // Create chart instances
-        priceChart = createChart(priceContainer, {
-          width: priceWidth,
-          height: priceHeight,
-          layout: {
-            background: { color: '#ffffff' },
-            textColor: '#333',
-          },
-          grid: {
-            vertLines: { color: '#f0f0f0' },
-            horzLines: { color: '#f0f0f0' },
-          },
-          timeScale: {
-            borderColor: '#cccccc',
-            timeVisible: true,
-            secondsVisible: false,
-          },
-          rightPriceScale: {
-            borderColor: '#cccccc',
-          },
-        });
-
-        ivChart = createChart(ivContainer, {
-          width: ivWidth,
-          height: ivHeight,
-          layout: {
-            background: { color: '#ffffff' },
-            textColor: '#333',
-          },
-          grid: {
-            vertLines: { color: '#f0f0f0' },
-            horzLines: { color: '#f0f0f0' },
-          },
-          timeScale: {
-            borderColor: '#cccccc',
-            timeVisible: true,
-            secondsVisible: false,
-          },
-          rightPriceScale: {
-            borderColor: '#cccccc',
-            scaleMargins: {
-              top: 0.1,
-              bottom: 0.1,
-            },
-          },
-        });
-
-        // Save chart instances to refs
-        priceChartRef.current = priceChart;
-        ivRankChartRef.current = ivChart;
-
-        // Add series
-        candlestickSeries = (priceChart as any).addCandlestickSeries({
-          upColor: '#26a69a',
-          downColor: '#ef5350',
-          borderVisible: false,
-          wickUpColor: '#26a69a',
-          wickDownColor: '#ef5350',
-        });
-
-        ivRankSeries = (ivChart as any).addLineSeries({
-          color: '#2962FF',
-          lineWidth: 2,
-          priceFormat: {
-            type: 'custom',
-            formatter: (price: number) => `${price.toFixed(1)}%`,
-          },
-        });
-
-        // Save series to refs
-        candlestickSeriesRef.current = candlestickSeries;
-        ivRankSeriesRef.current = ivRankSeries;
-
-        // === TIME SCALE SYNCHRONIZATION ===
-        const priceTimeScale = priceChart.timeScale();
-        const ivTimeScale = ivChart.timeScale();
-
-        // Sync Price → IV Rank
-        priceTimeScale.subscribeVisibleLogicalRangeChange((range) => {
-          if (range) {
-            ivTimeScale.setVisibleLogicalRange(range);
-          }
-        });
-
-        // Sync IV Rank → Price
-        ivTimeScale.subscribeVisibleLogicalRangeChange((range) => {
-          if (range) {
-            priceTimeScale.setVisibleLogicalRange(range);
-          }
-        });
-
-        console.log('Charts initialized successfully with dimensions:', {
-          priceWidth,
-          priceHeight,
-          ivWidth,
-          ivHeight
-        });
-        
-        return true;
-      } catch (err) {
-        console.error('Failed to initialize charts:', err);
-        return false;
+        if (resizeLogCountRef.current < 5) {
+          resizeLogCountRef.current += 1;
+          console.log('📐 Resize IV container', {
+            attempt: resizeLogCountRef.current,
+            rect: { width: rect.width, height: rect.height, top: rect.top, left: rect.left },
+            initialized: initializedRef.current,
+          });
+        }
       }
     };
+
+    const observer = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    observer.observe(priceChartContainerRef.current);
+    observer.observe(ivRankChartContainerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Effect 3: Load data (independent of charts)
+  useEffect(() => {
+    let isMounted = true;
 
     const loadData = async () => {
       if (!isMounted) return;
@@ -202,17 +274,7 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
         setLoading(true);
         setError(null);
 
-        // Initialize charts first if not already initialized
-        if (!priceChartRef.current || !ivRankChartRef.current) {
-          const initialized = initializeCharts();
-          if (!initialized) {
-            // Retry after a short delay if containers not ready
-            setTimeout(() => {
-              if (isMounted) loadData();
-            }, 200); // Increased delay for better layout calculation
-            return;
-          }
-        }
+        console.log('📊 Loading data...');
 
         // Fetch both datasets in parallel
         const [priceResponse, ivRankResponse] = await Promise.all([
@@ -222,6 +284,11 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
 
         if (!isMounted) return;
 
+        console.log('✅ Data loaded:', {
+          candles: priceResponse.candles.length,
+          ivRank: ivRankResponse.iv_rank_data.length
+        });
+
         // Transform to TradingView format
         const transformedPriceData = transformToCandlestickData(priceResponse.candles);
         const transformedIvRankData = transformToLineData(ivRankResponse.iv_rank_data);
@@ -230,52 +297,8 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
         setPriceData(transformedPriceData);
         setIvRankData(transformedIvRankData);
 
-        // Update chart data directly
-        if (candlestickSeriesRef.current && transformedPriceData.length > 0) {
-          candlestickSeriesRef.current.setData(
-            transformedPriceData.map(d => ({ ...d, time: d.time as UTCTimestamp }))
-          );
-        }
-
-        if (ivRankSeriesRef.current && transformedIvRankData.length > 0) {
-          ivRankSeriesRef.current.setData(
-            transformedIvRankData.map(d => ({ ...d, time: d.time as UTCTimestamp }))
-          );
-        }
-
-        // Fit content after data is set (only on first load)
-        if (!hasFittedContent && (transformedPriceData.length > 0 || transformedIvRankData.length > 0)) {
-          const fitContentWithRetry = (retryCount = 0) => {
-            if (!isMounted) return;
-            
-            const maxRetries = 3;
-            const priceChart = priceChartRef.current;
-            const ivChart = ivRankChartRef.current;
-            
-            if (priceChart && ivChart) {
-              try {
-                priceChart.timeScale().fitContent();
-                ivChart.timeScale().fitContent();
-                hasFittedContent = true;
-                console.log('fitContent called successfully');
-              } catch (err) {
-                console.warn('fitContent failed, retrying:', err);
-                if (retryCount < maxRetries) {
-                  setTimeout(() => fitContentWithRetry(retryCount + 1), 100 * (retryCount + 1));
-                }
-              }
-            } else if (retryCount < maxRetries) {
-              // Charts not ready yet, retry
-              setTimeout(() => fitContentWithRetry(retryCount + 1), 100 * (retryCount + 1));
-            }
-          };
-          
-          // Initial attempt after a short delay
-          setTimeout(() => fitContentWithRetry(), 100);
-        }
-
       } catch (err) {
-        console.error('Failed to load chart data:', err);
+        console.error('❌ Failed to load chart data:', err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : 'Failed to load data');
         }
@@ -286,71 +309,52 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
       }
     };
 
-    // Resize handler with debouncing
-    let resizeTimeout: number | null = null;
-    const handleResize = () => {
-      if (resizeTimeout !== null) {
-        clearTimeout(resizeTimeout);
-      }
-      
-      resizeTimeout = window.setTimeout(() => {
-        if (!isMounted) return;
-        
-        if (priceChartContainerRef.current && ivRankChartContainerRef.current) {
-          const priceWidth = priceChartContainerRef.current.clientWidth;
-          const priceHeight = priceChartContainerRef.current.clientHeight;
-          const ivWidth = ivRankChartContainerRef.current.clientWidth;
-          const ivHeight = ivRankChartContainerRef.current.clientHeight;
-          
-          // Only resize if dimensions are valid
-          if (priceWidth > 0 && priceHeight > 0) {
-            priceChartRef.current?.applyOptions({
-              width: priceWidth,
-              height: priceHeight
-            });
-          }
-          
-          if (ivWidth > 0 && ivHeight > 0) {
-            ivRankChartRef.current?.applyOptions({
-              width: ivWidth,
-              height: ivHeight
-            });
-          }
-        }
-      }, 150); // Debounce resize events
-    };
-
-    // Start loading data
     loadData();
-
-    // Add resize listener
-    window.addEventListener('resize', handleResize);
 
     // Cleanup function
     return () => {
       isMounted = false;
-      window.removeEventListener('resize', handleResize);
-      
-      // Clear resize timeout
-      if (resizeTimeout !== null) {
-        clearTimeout(resizeTimeout);
-      }
-      
-      // Clean up chart instances
-      if (priceChartRef.current) {
-        priceChartRef.current.remove();
-        priceChartRef.current = null;
-      }
-      if (ivRankChartRef.current) {
-        ivRankChartRef.current.remove();
-        ivRankChartRef.current = null;
-      }
-      
-      // Clear series refs
-      candlestickSeriesRef.current = null;
-      ivRankSeriesRef.current = null;
     };
   }, [baseCoin, symbol, days]);
+
+  // Effect 4: Apply data to charts when both ready
+  useEffect(() => {
+    if (!candlestickSeriesRef.current || !ivRankSeriesRef.current) {
+      console.log('⏳ Charts not ready yet');
+      return;
+    }
+
+    if (priceData.length === 0 && ivRankData.length === 0) {
+      console.log('⏳ Data not loaded yet');
+      return;
+    }
+
+    console.log('🎨 Applying data to charts');
+
+    if (priceData.length > 0) {
+      candlestickSeriesRef.current.setData(
+        priceData.map(d => ({ ...d, time: d.time as UTCTimestamp }))
+      );
+    }
+
+    if (ivRankData.length > 0) {
+      ivRankSeriesRef.current.setData(
+        ivRankData.map(d => ({ ...d, time: d.time as UTCTimestamp }))
+      );
+    }
+
+    setTimeout(() => {
+      if (priceChartRef.current && ivRankChartRef.current) {
+        try {
+          priceChartRef.current.timeScale().fitContent();
+          ivRankChartRef.current.timeScale().fitContent();
+          console.log('✅ Charts fitted');
+        } catch (err) {
+          console.warn('fitContent failed:', err);
+        }
+      }
+    }, 100);
+  }, [priceData, ivRankData]);
 
   // Loading state - show spinner while loading
   if (loading) {
@@ -391,20 +395,6 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
 
   // Check if we have data to display
   const hasData = priceData.length > 0 || ivRankData.length > 0;
-  
-  // If no data but not loading/error, show empty state
-  if (!hasData) {
-    return (
-      <div className="flex items-center justify-center" style={{ height }}>
-        <div className="text-center text-gray-500">
-          <p className="text-lg mb-2">No chart data available</p>
-          <p className="text-sm">
-            Try changing the parameters or check the data source.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // Get current IV Rank value safely
   const currentIVRank = ivRankData.length > 0 ? ivRankData[ivRankData.length - 1].value : null;
@@ -421,49 +411,68 @@ export const IVRankChart: React.FC<IVRankChartProps> = ({
       </div>
 
       {/* Price Chart Container (60% height) */}
-      <div 
+      <div
         ref={priceChartContainerRef}
-        className="w-full bg-white"
-        style={{ height: '60%' }}
+        className="w-full bg-gray-900"
+        style={{ 
+          height: '360px',
+          minHeight: '360px',
+          width: '100%',
+          position: 'relative'
+        }}
       />
 
       {/* IV Rank Chart Container (20% height) */}
-      <div 
+      <div
         ref={ivRankChartContainerRef}
-        className="w-full bg-white border-t border-gray-200"
-        style={{ height: '20%' }}
+        className="w-full bg-gray-900 border-t border-gray-700"
+        style={{ 
+          height: '120px',
+          minHeight: '120px',
+          width: '100%',
+          position: 'relative'
+        }}
       />
 
       {/* Legend/Info (20% height) */}
-      <div className="bg-gray-50 p-4" style={{ height: '20%' }}>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <p className="text-gray-600 mb-1">Current IV Rank</p>
-            <p className="text-2xl font-bold">
-              {currentIVRank !== null ? `${currentIVRank.toFixed(1)}%` : '—'}
+      <div className="bg-gray-800 p-4" style={{ height: '20%' }}>
+        {!hasData ? (
+          <div className="text-center text-gray-400 py-4">
+            <p className="text-lg mb-2">No chart data available</p>
+            <p className="text-sm text-gray-500">
+              Try changing the parameters or check the data source.
             </p>
           </div>
-          <div>
-            <p className="text-gray-600 mb-1">Interpretation</p>
-            <p className="text-lg">
-              {currentIVRank !== null ? (
-                currentIVRank < 25 ? (
-                  <span className="text-green-600">🟢 Low IV - Buy Options</span>
-                ) : currentIVRank > 75 ? (
-                  <span className="text-red-600">🔴 High IV - Sell Options</span>
+        ) : (
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-gray-400 mb-1">Current IV Rank</p>
+              <p className="text-2xl font-bold">
+                {currentIVRank !== null ? `${currentIVRank.toFixed(1)}%` : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-400 mb-1">Interpretation</p>
+              <p className="text-lg">
+                {currentIVRank !== null ? (
+                  currentIVRank < 25 ? (
+                    <span className="text-green-600">🟢 Low IV - Buy Options</span>
+                  ) : currentIVRank > 75 ? (
+                    <span className="text-red-600">🔴 High IV - Sell Options</span>
+                  ) : (
+                    <span className="text-gray-300">⚪ Normal IV</span>
+                  )
                 ) : (
-                  <span className="text-gray-600">⚪ Normal IV</span>
-                )
-              ) : (
-                <span className="text-gray-400">—</span>
-              )}
-            </p>
+                  <span className="text-gray-500">—</span>
+                )}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-400 mb-1">Data Points</p>
+              <p className="text-lg">{priceData.length} candles</p>
+            </div>
           </div>
-          <div>
-            <p className="text-gray-600 mb-1">Data Points</p>
-            <p className="text-lg">{priceData.length} candles</p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

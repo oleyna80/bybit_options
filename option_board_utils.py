@@ -234,7 +234,7 @@ def calculate_board_statistics(options_data: List[Dict[str, Any]]) -> Dict[str, 
     
     Args:
         options_data: List of formatted option data
-    
+        
     Returns:
         Statistics dictionary
     """
@@ -343,8 +343,15 @@ async def get_all_option_series(connector, base_coin: str = "BTC") -> list:
                      expiry = parts[1]  # Second part is expiry like "2JAN26"
                      expiries.add(expiry)
          
-         # Convert to sorted list
-         sorted_expiries = sorted(list(expiries))
+         # Convert to sorted list (Chronological sort)
+         def parse_expiry_date(expiry_str: str) -> datetime:
+             try:
+                 # Parse DDMMMYY (e.g., 2JAN26)
+                 return datetime.strptime(expiry_str, "%d%b%y")
+             except ValueError:
+                 return datetime.max
+        
+         sorted_expiries = sorted(list(expiries), key=parse_expiry_date)
          logger.info(f"[GET_ALL_OPTION_SERIES] Found {len(sorted_expiries)} unique option series for {base_coin}: {sorted_expiries}")
          return sorted_expiries
      
@@ -353,54 +360,65 @@ async def get_all_option_series(connector, base_coin: str = "BTC") -> list:
          return []
 
 
+def _normalize_option_symbol(symbol: str) -> str:
+    """Ensure option symbol has a single settlement suffix for API calls."""
+    for suffix in ("-USDT", "-USDC", "-USD"):
+        if symbol.endswith(suffix):
+            return symbol
+    return f"{symbol}-USDT"
+
+
 async def fetch_option_tickers(connector, symbols: List[str], batch_size: int = 20) -> Dict[str, Dict[str, Any]]:
-     """
-     Fetch ticker data for multiple option symbols in batches
-     
-     Args:
-         connector: BybitConnector instance
-         symbols: List of option symbols
-         batch_size: Number of symbols to fetch in parallel
-     
-     Returns:
-         Dictionary mapping symbol to ticker data
-     """
-     logger.info(f"[FETCH_OPTION_TICKERS] Starting to fetch {len(symbols)} symbols in batches of {batch_size}")
-     results = {}
-     
-     for i in range(0, len(symbols), batch_size):
-         batch = symbols[i:i + batch_size]
-         logger.info(f"[FETCH_OPTION_TICKERS] Processing batch {i//batch_size + 1}: {len(batch)} symbols")
-         
-         # Fetch all tickers in parallel - need to add -USDT suffix for API
-         tasks = [
-             connector.get_tickers(category="option", symbol=f"{symbol}-USDT")
-             for symbol in batch
-         ]
-         batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-         
-         # Process results
-         successful = 0
-         failed = 0
-         for symbol, result in zip(batch, batch_results):
-             if isinstance(result, Exception):
-                 logger.warning(f"[FETCH_OPTION_TICKERS] Failed to fetch ticker for {symbol}: {result}")
-                 failed += 1
-                 continue
-             
-             if not result:
-                 logger.warning(f"[FETCH_OPTION_TICKERS] No data returned for {symbol}")
-                 failed += 1
-                 continue
-             
-             ticker = result[0] if result else {}
-             results[symbol] = ticker
-             successful += 1
-         
-         logger.info(f"[FETCH_OPTION_TICKERS] Batch {i//batch_size + 1}: {successful} successful, {failed} failed. Total results: {len(results)}")
-     
-     logger.info(f"[FETCH_OPTION_TICKERS] Finished fetching tickers. Total results: {len(results)}")
-     return results
+    """
+    Fetch ticker data for multiple option symbols in batches
+
+    Args:
+        connector: BybitConnector instance
+        symbols: List of option symbols
+        batch_size: Number of symbols to fetch in parallel
+
+    Returns:
+        Dictionary mapping symbol to ticker data
+    """
+    logger.info(f"[FETCH_OPTION_TICKERS] Starting to fetch {len(symbols)} symbols in batches of {batch_size}")
+    results = {}
+
+    for i in range(0, len(symbols), batch_size):
+        batch = symbols[i:i + batch_size]
+        logger.info(f"[FETCH_OPTION_TICKERS] Processing batch {i//batch_size + 1}: {len(batch)} symbols")
+
+        # Fetch all tickers in parallel - ensure single settlement suffix.
+        tasks = [
+            connector.get_tickers(category="option", symbol=_normalize_option_symbol(symbol))
+            for symbol in batch
+        ]
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Process results
+        successful = 0
+        failed = 0
+        for symbol, result in zip(batch, batch_results):
+            if isinstance(result, Exception):
+                logger.warning(f"[FETCH_OPTION_TICKERS] Failed to fetch ticker for {symbol}: {result}")
+                failed += 1
+                continue
+
+            if not result:
+                logger.warning(f"[FETCH_OPTION_TICKERS] No data returned for {symbol}")
+                failed += 1
+                continue
+
+            ticker = result[0] if result else {}
+            results[symbol] = ticker
+            successful += 1
+
+        logger.info(
+            f"[FETCH_OPTION_TICKERS] Batch {i//batch_size + 1}: "
+            f"{successful} successful, {failed} failed. Total results: {len(results)}"
+        )
+
+    logger.info(f"[FETCH_OPTION_TICKERS] Finished fetching tickers. Total results: {len(results)}")
+    return results
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
 from config import get_config
-from data_models import PerpetualOHLCV, OptionIVDaily, IVRankDaily
+from bybit_options.models import PerpetualOHLCV, OptionIVDaily, IVRankDaily
 
 logger = logging.getLogger(__name__)
 

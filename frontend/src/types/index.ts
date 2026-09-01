@@ -20,6 +20,10 @@ export enum OptionType {
   PUT = "P"
 }
 
+export type SortOrder = "asc" | "desc";
+export type OptionsBoardSortBy = "strike" | "mark_price" | "delta" | "iv" | "spread";
+export type OptionTypeParam = OptionType | "CALL" | "PUT" | "C" | "P";
+
 // Basic models
 export interface CoinHolding {
   coin: string;
@@ -225,7 +229,10 @@ export interface WebSocketMessage {
 export interface OptionsFilter {
   base_coin?: string;
   expiry?: string;
-  option_type?: OptionType;
+  option_type?: OptionTypeParam;
+  sort_by?: OptionsBoardSortBy;
+  sort_order?: SortOrder;
+  limit?: number;
   min_strike?: number;
   max_strike?: number;
 }
@@ -270,18 +277,86 @@ export interface ApiResponse<T> {
 }
 
 export interface OptionsBoardResponse {
+  base_coin: string;
   underlying_price: number;
-  expiry: string;
   options: OptionRow[];
+  options_count: number;
+  series: string[];
+  expiry?: string | null;
+  option_type?: string | null;
+  sort_by: string;
+  sort_order: SortOrder | string;
+  limit: number;
 }
 
 export interface PayoffChartResponse {
+  error?: string;
+  base_coin?: string;
+  current_price_source?: "market" | "estimated" | string;
   current_price: number;
+  current_pnl?: number;
   price_range: number[];
   pnl: number[];
   breakeven_points: number[];
   max_profit: number;
   max_loss: number;
+  max_profit_price?: number;
+  max_loss_price?: number;
+  mode?: "at_expiry" | "with_theta" | "full" | string;
+  summary?: {
+    total_positions: number;
+    options_count: number;
+    linear_count: number;
+    total_delta: number;
+    total_gamma: number;
+    total_vega: number;
+    total_theta: number;
+    net_premium: number;
+    premium_direction: string;
+    expiry_breakdown: Record<
+      string,
+      {
+        options_count: number;
+        total_delta: number;
+        total_theta: number;
+        net_premium: number;
+      }
+    >;
+    coin_breakdown: Record<
+      string,
+      {
+        positions_count: number;
+        total_delta: number;
+        total_theta: number;
+      }
+    >;
+  };
+  expiry_payoffs?: Record<
+    string,
+    {
+      current_pnl: number;
+      max_profit: number;
+      max_loss: number;
+      breakeven_points: number[];
+      positions_count: number;
+    }
+  >;
+  metadata?: {
+    positions_count: number;
+    options_count: number;
+    linear_count: number;
+    calculation_timestamp: string;
+    cache_used: boolean;
+    theta_included: boolean;
+    days_to_expiry: number | null;
+  };
+  portfolio_summary?: {
+    base_coin: string;
+    delta_coin: number;
+    gamma_coin: number;
+    vega_usd: number;
+    theta_usd: number;
+  };
 }
 
 export interface ExportData {

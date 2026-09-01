@@ -23,11 +23,11 @@ from strategy_models import (
 from vega_hedge_calculator import VegaHedgeCalculator
 from scenario_simulator import ScenarioSimulator, ScenarioParameters
 from visualization import StrategyVisualizer
-from data_models import PositionSide, OptionType, GreeksModel
+from bybit_options.models import PositionSide, OptionType, GreeksModel
 
 # Try to import Bybit connector for real data
 try:
-    from bybit_connector import BybitConnector
+    from bybit_options.services.bybit_connector import BybitConnector
 
     HAS_BYBIT_CONNECTOR = True
 except ImportError:

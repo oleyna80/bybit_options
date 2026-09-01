@@ -1,0 +1,40 @@
+{
+  "python.analysis.include": [],
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/.astro",
+    "**/dist",
+    "**/.git",
+    "**/.cache",
+    "**/build",
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/.venv",
+    "**/venv",
+    "**/.env",
+    "**/.env.local"
+  ],
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/.cache": true,
+    "**/dist": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.venv": true,
+    "**/venv": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/**": true,
+    "**/.cache/**": true,
+    "**/dist/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.venv/**": true,
+    "**/venv/**": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.pylance": "explicit"
+  }
+}

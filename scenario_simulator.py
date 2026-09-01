@@ -550,7 +550,7 @@ if __name__ == "__main__":
 
     # Create example legs
     from strategy_models import IronCondorLeg
-    from data_models import PositionSide, OptionType, GreeksModel
+    from bybit_options.models import PositionSide, OptionType, GreeksModel
 
     example_legs = [
         IronCondorLeg(
