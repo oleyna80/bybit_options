@@ -1,161 +1,185 @@
 # Runtime Configuration
 
-> **Last verified:** 2026-01-17  
-> **Status:** ACTIVE  
+> **Verified against `main`:** 2026-09-02 (`e46a944383111a79336b15544436f2e97de2c862`)  
+> **Status:** CURRENT REPOSITORY SNAPSHOT  
 > **Owner:** Tech Lead
 
----
+This document describes repository-observable runtime facts. It is not authority
+to start live trading, mutate a live database, deploy production, or use
+production credentials. Those actions remain Hard Stops under `AGENTS.md` and
+`governance/authority.md`.
 
-## Services Overview
+## Safety boundary
 
-| Service | Port | Entry Point | Mode |
-|---------|------|-------------|------|
-| **Backend API** | 8000 | See below | REST + WS |
-| **Frontend** | 3002 | `frontend/src/index.tsx` | React + Vite |
-| **Delta Hedger** | — | `scripts/run_hedger.py` | Background |
-| **WebSocket** | 8000 | `/ws/portfolio` | Real-time |
+- Treat backend/hedger startup as **network-capable**, not as a harmless smoke
+  check, whenever real credentials are present.
+- `bybit_options/api/app.py` currently creates `BybitConnector(...,
+  testnet=False)` during application lifespan. `BYBIT_TESTNET` therefore does
+  **not** make this API entry point testnet-safe today.
+- `python scripts/run_hedger.py --dry-run` is **not an offline/no-side-effect
+  verifier**: the script loads credentials, requires `DATABASE_URL`, creates a DB
+  pool and connector, and starts/stops the bot task before exit.
+- Do not apply SQL migrations from a documentation recipe. Migration ordering,
+  target environment, backup/rollback, and Owner approval must be established for
+  the specific database first.
+- Do not copy real credentials into documentation, chat, reports, or committed
+  files.
 
-### Backend API Entry Points
+## Verified services and ports
 
-| Type | Entry Point | Use Case |
-|------|-------------|----------|
-| **Demo/Dev** | `api_example.py` | Quick testing, backwards compat |
-| **Production** | `bybit_options/api/app.py` | Production deployment |
+| Surface | Repository-observed port | Entry point / evidence | Notes |
+|---|---:|---|---|
+| Backend API | 8000 | `bybit_options/api/app.py` | Canonical app; network-capable |
+| Docker backend | 8000 | `Dockerfile.backend` → `api_example:app` | `api_example.py` is a compatibility shim to the canonical app |
+| Frontend dev server | 3001 | `frontend/vite.config.ts` | Vite binds `0.0.0.0:3001` |
+| Frontend container | 3001 | `frontend/Dockerfile`, `docker-compose.yml` | `serve -s dist -l 3001` |
+| WebSocket | 8000 | `/ws/portfolio` in FastAPI app | Same backend process |
+| Delta Hedger | — | `scripts/run_hedger.py` | Background process; can reach exchange/DB |
+| PostgreSQL / TimescaleDB | 5432 in Compose | `docker-compose.yml` | Local Compose mapping only |
+| Redis | 6379 in Compose | `docker-compose.yml` | Local Compose mapping only |
 
-> **SSOT:** For new development, use `bybit_options/api/app.py`.
-> `api_example.py` is maintained for demo/backwards compatibility only.
+The former `3002` frontend value found in older documentation is stale relative
+to both `frontend/vite.config.ts` and current Docker configuration.
 
----
+## Entry points
 
-## Start Commands
+### CLI compatibility entry
 
-### Backend API (Risk Engine)
-
-**Development (demo):**
 ```bash
-cd /home/dmitrii/projects/bybit_options
-source .venv/bin/activate
-uvicorn api_example:app --reload --port 8000
+python main.py
 ```
 
-**Production:**
-```bash
-cd /home/dmitrii/projects/bybit_options
-source .venv/bin/activate
-uvicorn bybit_options.api.app:app --host 0.0.0.0 --port 8000 --workers 4
+`main.py` is a thin compatibility shim to `apps.cli`. Whether the resulting CLI
+performs network access depends on the called application path and available
+environment configuration. Inspect the target code before using live
+credentials.
+
+### Backend API
+
+Canonical application object:
+
+```text
+bybit_options.api.app:app
 ```
+
+A common development launch shape is:
+
+```bash
+uvicorn bybit_options.api.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+**Do not run this command as a generic verification step with production/live
+Bybit credentials.** The current application hard-codes `testnet=False` when it
+initializes the connector.
 
 ### Frontend
 
+From `frontend/`:
+
 ```bash
-cd /home/dmitrii/projects/bybit_options/frontend
 npm run dev
-# Opens on http://localhost:3002
 ```
 
-### Delta Hedger Bot
+Repository-observed URL:
 
-```bash
-cd /home/dmitrii/projects/bybit_options
-source .venv/bin/activate
-python scripts/run_hedger.py
-# Or with dry-run: python scripts/run_hedger.py --dry-run
+```text
+http://localhost:3001
 ```
 
----
+The Vite proxy targets backend HTTP at `http://localhost:8000` and WebSocket at
+`ws://localhost:8000`.
 
-## Health Checks
+### Delta Hedger
 
-| Service | Endpoint | Expected |
-|---------|----------|----------|
-| Backend API | `curl http://localhost:8000/` | `{"status": "ok"}` |
-| Swagger Docs | `http://localhost:8000/docs` | OpenAPI UI |
-| Frontend | `http://localhost:3002` | React app loads |
-| Options Board API | `curl http://localhost:8000/api/v1/options-board` | JSON data |
-| Portfolio API | `curl http://localhost:8000/api/v1/risk/portfolio` | JSON data |
+Entry point:
 
----
-
-## Environment Variables
-
-Primary config file: `.env` (see `.env.example` for template)
-
-### Required
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `BYBIT_API_KEY` | Bybit API key | `abc123...` |
-| `BYBIT_API_SECRET` | Bybit API secret | `xyz789...` |
-| `DATABASE_URL` | PostgreSQL connection | `postgresql://user:pass@localhost/db` |
-
-### Optional
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BYBIT_TESTNET` | `false` | Use testnet API |
-| `VITE_API_URL` | `/api/v1` | Frontend API base URL |
-| `HEDGER_ENABLED` | `false` | Enable Delta Hedger |
-| `TELEGRAM_BOT_TOKEN` | — | Telegram alerts (optional) |
-| `TELEGRAM_CHAT_ID` | — | Telegram chat ID (optional) |
-
----
-
-## Database
-
-### Connection
-
-```bash
-psql $DATABASE_URL
+```text
+scripts/run_hedger.py
 ```
 
-### Migrations
+This is a trading-capable runtime surface. Do not start it against live
+credentials without the required Owner/external capability approval. The current
+`--dry-run` flag is initialization-and-exit behavior, not evidence of full
+network/database isolation.
 
-```bash
-cd /home/dmitrii/projects/bybit_options
-psql $DATABASE_URL -f database_migrations/003_create_hedger_tables.sql
-psql $DATABASE_URL -f database_migrations/004_create_fractals_tables.sql
-psql $DATABASE_URL -f database_migrations/005_add_option_config_fields.sql
-```
+## Environment variables verified from current code
 
----
+There is **no committed `.env.example` on `main`** as of the verification date.
+Do not rely on older documentation that points to one.
 
-## Ports Summary
+### FastAPI application (`bybit_options/api/app.py`)
 
-| Port | Service | Protocol |
-|------|---------|----------|
-| 3002 | Frontend (Vite dev server) | HTTP |
-| 8000 | Backend API (FastAPI) | HTTP/WS |
-| 5432 | PostgreSQL (default) | TCP |
+| Variable | Observed use |
+|---|---|
+| `BYBIT_API_KEY` | Required at lifespan startup |
+| `BYBIT_API_SECRET` | Required at lifespan startup |
+| `DATABASE_URL` | Required by imported `database.py`; missing value raises during import |
+| `CORS_ALLOW_ORIGINS` | Optional; default `http://localhost:3001` |
+| `API_AUTH_TOKEN` | Optional bearer-token enforcement |
+| `ENABLE_DELTA_SERVICES` | Optional; default `false` |
 
----
+`BYBIT_TESTNET` is **not honored by this FastAPI connector path** at present;
+`testnet=False` is explicit in the code.
 
-## Troubleshooting
+### Delta Hedger (`scripts/run_hedger.py`)
 
-### Port already in use
+| Variable | Observed use |
+|---|---|
+| `BYBIT_API_KEY` | Required |
+| `BYBIT_API_SECRET` | Required |
+| `DATABASE_URL` | Required |
+| `BYBIT_TESTNET` | Read by this script; default is `true` |
 
-```bash
-# Find process on port
-lsof -ti:8000
-# Kill it
-kill $(lsof -ti:8000)
-```
+Other services may read additional variables. Treat undocumented variables as
+`UNKNOWN` until verified in the relevant code/config surface.
 
-### Frontend can't reach backend
+## Docker Compose notes
 
-1. Check backend is running: `curl http://localhost:8000/`
-2. Check Vite proxy config: `frontend/vite.config.ts`
-3. Check browser Network tab for actual request URL
+`docker-compose.yml` exposes backend `8000`, frontend `3001`, Redis `6379`, and
+TimescaleDB `5432`.
 
-### Database connection failed
+The Compose file currently contains a development-looking database password and
+connection string (`secure_password`). Treat these as repository configuration,
+**not** as an approved production secret-management pattern. This review does not
+change runtime configuration.
 
-1. Check PostgreSQL is running: `pg_isready`
-2. Verify `DATABASE_URL` in `.env`
-3. Check migrations are applied
+Running `docker compose up`, restarting services, or changing Compose state may
+have external/runtime effects. Confirm the target environment and applicable
+Hard Stops first.
 
----
+## Database and migrations
 
-## See Also
+Current repository migration inventory is broader than the old 003–005 recipe:
+`database_migrations/` contains 001–010 and 012–014 on this baseline, and the
+repository also contains `migrations/`.
 
-- [Architecture Overview](../architecture.md)
-- [Delta Hedger Tasklist](../tasklist/HEDGER.tasklist.md)
+Because the authoritative ordering/application procedure is not established by a
+single verified migration runner in this documentation review, the correct
+command to apply migrations is **UNKNOWN**. Do not infer that running individual
+`psql -f` files is safe or complete.
+
+Read-only connectivity checks may still reach a database and must use an approved
+non-production target when environment separation matters.
+
+## Health and verification
+
+Safe static checks for documentation/runtime reconciliation include inspecting:
+
+- `frontend/vite.config.ts` and `frontend/Dockerfile` for frontend port;
+- `Dockerfile.backend` and `api_example.py` for container backend target;
+- `bybit_options/api/app.py` for API startup/env behavior;
+- `scripts/run_hedger.py` for hedger startup behavior;
+- `database.py` for DB configuration requirements;
+- `docker-compose.yml` for container port mappings.
+
+HTTP `curl`, database connection, Bybit API calls, container startup, and hedger
+startup are runtime checks, not static documentation checks. Their safety depends
+on the target environment and credentials.
+
+## See also
+
+- [Architecture contracts](../architecture/README.md)
+- [Session/bootstrap authority](../session-bootstrap.md)
+- [Delta Hedger tasklist](../tasklist/HEDGER.tasklist.md)
 - [Frontend README](../../frontend/README.md)
+- [Project operating contract](../../AGENTS.md)

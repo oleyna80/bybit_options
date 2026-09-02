@@ -5,3 +5,22 @@ __pycache__/
 venv/
 *.log
 *.csv
+
+# Local secrets / credentials / private runtime state
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+secrets*
+
+# Local databases and generated trading/account artefacts
+*.db
+*.sqlite
+*.sqlite3
+bybit_option_fills_year.json
+frontend/bybit_option_fills_year.json
+reports/latest_analysis.md
+reports/risk_analysis_*.md

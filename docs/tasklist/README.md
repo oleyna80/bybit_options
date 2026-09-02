@@ -23,3 +23,15 @@ Then run the read-only `spec-consistency-analysis` skill before the applicable
 Critic/write gate.
 
 Suggested filename format: `YYYY-MM-DD-short-topic.md`.
+
+## Status semantics
+
+A tasklist is a **derived planning artifact**, not proof that implementation or
+verification is complete. Historical tasklists in this directory may use older
+formats such as `Status: TASKLIST_READY` without per-task completion state.
+
+Do not infer `DONE`, `READY`, merge-readiness, or deploy-readiness from file
+presence, a ready tasklist, or a historical report alone. Resolve current status
+from the applicable approved specification/Work Block plus current assurance and
+closeout evidence. If those bindings cannot be established, report status as
+`UNKNOWN`.
