@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import re
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
 GATE_PATH = Path(".agent/active-work-block.json")
 
@@ -28,7 +28,7 @@ CONSEQUENTIAL = [
         re.compile(
             r"\b(git\s+reset\s+--hard|git\s+clean|terraform\s+destroy|"
             r"kubectl\s+delete|DROP\s+(DATABASE|TABLE))\b",
-            re.I,
+            re.IGNORECASE,
         ),
         "destructive operation",
     ),
@@ -37,19 +37,19 @@ CONSEQUENTIAL = [
             r"\b(kubectl\s+(apply|patch|replace|scale|rollout|set)|"
             r"terraform\s+apply|systemctl\s+(restart|stop|start)|"
             r"service\s+\S+\s+(restart|stop|start)|scp|ssh|rsync[^\n]*:)\b",
-            re.I,
+            re.IGNORECASE,
         ),
         "live infrastructure operation",
     ),
     (
-        re.compile(r"\bdocker\s+push\b", re.I),
+        re.compile(r"\bdocker\s+push\b", re.IGNORECASE),
         "external image publish",
     ),
     (
         re.compile(
             r"\b(psql|mysql|mongosh|redis-cli)\b[^\n]*\b"
             r"(DELETE|UPDATE|INSERT|ALTER|DROP|TRUNCATE|CREATE)\b",
-            re.I,
+            re.IGNORECASE,
         ),
         "direct live-data mutation",
     ),
@@ -59,7 +59,7 @@ CONSEQUENTIAL = [
             r"(\.env(?:\.(?!example(?:[\s/]|$))[\w.-]+)?|credentials|secrets)"
             r"([\s/]|$)|"
             r"\b(rotate|revoke)\b[^\n]*(token|secret|key|credential)",
-            re.I,
+            re.IGNORECASE,
         ),
         "credential or secret operation",
     ),
@@ -68,7 +68,7 @@ CONSEQUENTIAL = [
             r"\b(sendmail|mailx|twilio|sendgrid|msmtp|ssmtp)\b|"
             r"\bcurl\b[^\n]*(messages|email|sms|notifications|whatsapp)[^\n]*"
             r"(-X\s*(POST|PUT|PATCH)|--data)",
-            re.I,
+            re.IGNORECASE,
         ),
         "client-facing communication",
     ),
@@ -137,7 +137,7 @@ def current_branch(root: Path) -> str:
 def recursive_rm(command: str) -> bool:
     prefix = r"(?:(?:sudo|command|env)\s+)?"
     for match in re.finditer(
-        rf"(?:^|[;&|\n]\s*){prefix}rm\s+([^;&|\n]+)", command, re.I
+        rf"(?:^|[;&|\n]\s*){prefix}rm\s+([^;&|\n]+)", command, re.IGNORECASE
     ):
         try:
             tokens = shlex.split(match.group(1), posix=True)
@@ -155,7 +155,7 @@ def recursive_rm(command: str) -> bool:
 
 def force_push(command: str) -> bool:
     return bool(
-        re.search(r"\bgit\s+push\b[^\n]*(?:\s-f(?:\s|$)|--force(?:-with-lease)?\b|\s\+[^\s]+)", command, re.I)
+        re.search(r"\bgit\s+push\b[^\n]*(?:\s-f(?:\s|$)|--force(?:-with-lease)?\b|\s\+[^\s]+)", command, re.IGNORECASE)
     )
 
 
@@ -163,7 +163,7 @@ def push_segments(command: str) -> list[str]:
     return [
         match.group(1).strip()
         for match in re.finditer(
-            r"(?:^|[;&|\n]\s*)git\s+push\b([^;&|\n]*)", command, re.I
+            r"(?:^|[;&|\n]\s*)git\s+push\b([^;&|\n]*)", command, re.IGNORECASE
         )
     ]
 
@@ -212,8 +212,7 @@ def tag_publish(command: str) -> bool:
 
 def canonical_branch_ref(value: str) -> str:
     ref = value.strip()
-    if ref.startswith("refs/heads/"):
-        ref = ref[len("refs/heads/") :]
+    ref = ref.removeprefix("refs/heads/")
     return ref
 
 
@@ -250,7 +249,7 @@ def runtime_invocations(command: str) -> set[str]:
         if re.search(
             rf"(?:^|[;&|\n]\s*){prefix}{re.escape(runtime)}(?:\s|$)",
             command,
-            re.I,
+            re.IGNORECASE,
         ):
             found.add(integration_id)
     return found
@@ -280,7 +279,7 @@ def check_command(command: str, gate: dict, root: Path) -> None:
         deny("Broad or destructive remote push is outside the normal agent capability boundary.")
     if tag_publish(command):
         deny("External tag publication is outside the normal agent capability boundary.")
-    if re.search(r"\bgit\s+push\b", command, re.I) and pushes_default_branch(command, root):
+    if re.search(r"\bgit\s+push\b", command, re.IGNORECASE) and pushes_default_branch(command, root):
         deny("Direct protected/default-branch push is outside the normal agent capability boundary; use a pull request.")
 
     for pattern, label in CONSEQUENTIAL:
