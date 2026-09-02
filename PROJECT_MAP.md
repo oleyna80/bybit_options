@@ -23,7 +23,17 @@ separable layers:
 Runtime, model, judge, integration, installation profile, requirements-quality
 verdict, or traceability validator result never changes governance authority.
 
-The product is a Python/FastAPI options-trading system with PostgreSQL-facing services and a JavaScript frontend. Primary source roots are `bybit_options/`, `tests/`, `frontend/`, `database_migrations/`, and `migrations/`. Existing `.agent/**`, `agreements/**`, and `.memory_bank/**` material is retained legacy discovery context; it is non-authoritative after SDLC-MIGRATION-001.
+The product is a Python/FastAPI options-trading system with PostgreSQL-facing services and a JavaScript frontend. Primary source roots are `bybit_options/`, `tests/`, `frontend/`, `database_migrations/`, and `migrations/`.
+
+Legacy material retained for recovery/discovery currently includes
+`.agent/PROJECT_BRIEF.md`, `.agent/conventions.md`, `.agent/roles/**`,
+`.agent/workflows/bybit_options_workflow.md`, project-local flat
+`.agent/skills/*.md` files not selected by the bootstrap profile,
+`agreements/**`, and `.memory_bank/**`. These surfaces are non-authoritative
+after `SDLC-MIGRATION-001`; they may preserve product history that still needs
+reconciliation. Current `.agent/ROSTER.md`, `.agent/workflows/sdd-protocol.md`,
+bootstrap-selected folder-form skills, active Work Block state, and `.agent/hooks/**`
+remain current control-plane/runtime surfaces as classified below.
 
 ## Installation Profile
 
@@ -168,11 +178,11 @@ scripts/validate-evaluation.py
 | `.agent/active-work-block.default.json` | portable default | Fail-closed restore state including optional PENDING evaluation |
 | `.agent/verification-gate.md` | compatibility view | Review, verification, evaluation, drift, closeout summary |
 | `.agent/hooks/` | shared runtime policy | Provider-neutral consequential-action guards |
+| `.agent/skills/<selected-skill>/SKILL.md` | runtime adapter | Canonical portable skill selected by `.agent/bootstrap-profile.json`; flat legacy skill files are discovery context only |
 | `docs/specs/` | normative | Approved product and technical behavior |
 | `docs/architecture/` | normative | Accepted architecture decisions and contracts |
 | `docs/plans/` | derived/log | Approved plans and Work Blocks |
 | `docs/tasklist/` | derived | Active task decomposition with optional stable REQ/AC/TASK traceability |
-| `docs/reports/requirements/` | evidence | Define-stage requirements-quality reviews |
 | `docs/evals/` | evidence/config | Approved evaluation plans, fixtures, observable events |
 | `docs/reports/evaluations/` | evidence | Evaluation matrices, gaps, risks, verdicts |
 | `docs/reports/` | evidence | All assurance, integration, and closeout evidence |

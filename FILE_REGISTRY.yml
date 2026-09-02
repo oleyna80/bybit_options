@@ -172,11 +172,55 @@ entries:
     status: operational_log
     owner: verifier
 
-  .agent/skills/**:
-    role: profile_selected_portable_skills
+  .agent/skills/<selected-skill>/SKILL.md:
+    role: profile_selected_portable_skill
     status: runtime_adapter
     owner: architect
     selection_source: .agent/bootstrap-profile.json
+    authority: method_only
+
+  .agent/skills/*.md:
+    role: retained_project_local_legacy_skill_context
+    status: durable_reference
+    owner: architect
+    authority: none
+    note: "README.md is current navigation; unselected flat skill files are non-authoritative unless a future bootstrap profile explicitly selects them"
+
+  .agent/PROJECT_BRIEF.md:
+    role: retained_legacy_product_context
+    status: durable_reference
+    owner: architect
+    authority: none
+
+  .agent/conventions.md:
+    role: retained_legacy_engineering_context
+    status: durable_reference
+    owner: architect
+    authority: none
+
+  .agent/roles/**:
+    role: retained_legacy_role_context
+    status: durable_reference
+    owner: architect
+    authority: none
+
+  .agent/workflows/bybit_options_workflow.md:
+    role: retained_legacy_product_workflow_context
+    status: durable_reference
+    owner: architect
+    authority: none
+
+  agreements/**:
+    role: retained_legacy_agent_protocol_context
+    status: durable_reference
+    owner: architect
+    authority: none
+
+  .memory_bank/**:
+    role: retained_legacy_recovery_and_operational_context
+    status: operational_log
+    owner: orchestrator
+    authority: none
 
   docs/specs/**:
     role: approved_product_and_technical_specifications
