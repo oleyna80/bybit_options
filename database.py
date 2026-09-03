@@ -35,6 +35,33 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False
 )
 
+from bybit_options.storage.repositories import (
+    OrderRepository,
+    PortfolioSnapshotRepository,
+    TradeRepository,
+)
+
+
+def get_trade_repository() -> TradeRepository:
+    """Get a TradeRepository backed by the configured SQLAlchemy session."""
+    from bybit_options.storage.adapters import SQLAlchemyTradeRepository
+
+    return SQLAlchemyTradeRepository(AsyncSessionLocal)
+
+
+def get_order_repository() -> OrderRepository:
+    """Get an OrderRepository backed by the configured SQLAlchemy session."""
+    from bybit_options.storage.adapters import SQLAlchemyOrderRepository
+
+    return SQLAlchemyOrderRepository(AsyncSessionLocal)
+
+
+def get_portfolio_snapshot_repository() -> PortfolioSnapshotRepository:
+    """Get a PortfolioSnapshotRepository backed by the configured SQLAlchemy session."""
+    from bybit_options.storage.adapters import SQLAlchemyPortfolioSnapshotRepository
+
+    return SQLAlchemyPortfolioSnapshotRepository(AsyncSessionLocal)
+
 # Base class for ORM models
 Base = declarative_base()
 

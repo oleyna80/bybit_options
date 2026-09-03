@@ -3,7 +3,7 @@ Candle manager for D1/H4/H1 data from Bybit.
 """
 from typing import List, Dict, Optional
 
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 
 
 class CandleManager:

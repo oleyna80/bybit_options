@@ -809,7 +809,7 @@ if __name__ == "__main__":
         IronCondorLeg,
         StrategyType,
     )
-    from data_models import PositionSide, OptionType, GreeksModel
+    from bybit_options.models import PositionSide, OptionType, GreeksModel
 
     # Create example config
     config = IronCondorConfig(

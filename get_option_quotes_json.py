@@ -13,7 +13,7 @@ import sys
 import json
 from datetime import datetime
 from dotenv import load_dotenv
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 
 
 async def get_option_quotes_json(symbols: list):

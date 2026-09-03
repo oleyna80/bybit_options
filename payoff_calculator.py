@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import functools
 import time
 
-from data_models import (
+from bybit_options.models import (
     PositionModel,
     PositionSide,
     PositionType,
@@ -895,7 +895,7 @@ if __name__ == "__main__":
     import sys
     sys.path.append(".")
     
-    from data_models import PositionModel, PositionSide, PositionType, OptionType, GreeksModel
+    from bybit_options.models import PositionModel, PositionSide, PositionType, OptionType, GreeksModel
     
     # Create test positions
     test_positions = [

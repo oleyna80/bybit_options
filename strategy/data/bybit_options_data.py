@@ -8,7 +8,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 from config import get_config
 
 

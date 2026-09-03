@@ -22,7 +22,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
-from bybit_connector import BybitConnector
+from bybit_options.services.bybit_connector import BybitConnector
 from database import async_engine, AsyncSessionLocal
 from config import get_config
 

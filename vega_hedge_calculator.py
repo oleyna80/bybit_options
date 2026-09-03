@@ -13,7 +13,7 @@ from strategy_models import (
     HedgeRecommendation,
     GreeksModel,
 )
-from data_models import PositionSide, OptionType
+from bybit_options.models import PositionSide, OptionType
 
 logger = logging.getLogger(__name__)
 
