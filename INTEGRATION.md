@@ -24,9 +24,9 @@ Frontend (React)              Backend (FastAPI)        External Services
 │                 │ REST API │                 │      │  Bybit API   │
 │  React App      ├─────────►│ FastAPI Server  ├─────►│              │
 │  (Vite)         │◄─────────│                 │◄─────┤              │
-│                 │ WebSocket│  - api_example  │      │              │
-└─────────────────┘          │  - orchestrator │      └──────────────┘
-                             │  - risk_engine  │
+│                 │ WebSocket│  - api (bybit_options.api.app) │      │              │
+└─────────────────┘          │  - orchestrator (bybit_options.orchestration) │      └──────────────┘
+                             │  - risk_engine (bybit_options.core) │
                              └────────┬────────┘
                                       │
                         ┌─────────────┴────────────┐
@@ -75,7 +75,7 @@ EOF
 
 ```bash
 # Terminal 1: Backend
-uvicorn api_example:app --reload --host 0.0.0.0 --port 8000
+uvicorn bybit_options.api.app:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 2: Frontend
 cd frontend && npm run dev
@@ -435,7 +435,7 @@ HTTP Status Codes:
 
 ```bash
 # Backend
-uvicorn api_example:app --reload --host 0.0.0.0 --port 8000
+uvicorn bybit_options.api.app:app --reload --host 0.0.0.0 --port 8000
 
 # Frontend
 cd frontend && npm run dev
@@ -470,7 +470,7 @@ serve -s dist -l 3001
 
 # Backend with gunicorn
 pip install gunicorn
-gunicorn api_example:app -w 4 -b 0.0.0.0:8000
+gunicorn bybit_options.api.app:app -w 4 -b 0.0.0.0:8000
 ```
 
 #### Using Nginx Reverse Proxy
@@ -524,11 +524,24 @@ BYBIT_API_KEY=production_key
 BYBIT_API_SECRET=production_secret
 LOG_LEVEL=WARNING
 DATABASE_URL=postgresql://user:pass@host:5432/db
+API_AUTH_TOKEN=strong_token_value
+CORS_ALLOW_ORIGINS=https://app.example.com
 
 # Frontend
 VITE_API_URL=https://api.example.com
 NODE_ENV=production
 ```
+
+---
+
+## Чек-лист обновления API (перед продом)
+
+- CI: Убедиться, что прошли `ruff check .` и `pytest --maxfail=1 --disable-warnings` (см. GitHub Actions workflow).
+- Auth: Установить `API_AUTH_TOKEN` и требовать `Authorization: Bearer ...` на всех REST endpoints.
+- CORS: Настроить `CORS_ALLOW_ORIGINS` (без `*` в проде), сверить с доменом фронтенда.
+- Логи/секреты: `LOG_LEVEL=INFO/ WARNING`, проверить, что `.env` не в репозитории и ключи не логируются.
+- Документация: Обновить `/docs` и этот файл при изменении контрактов (новые параметры/форматы).
+- Деплой: Прогнать миграции БД (если есть), перезапустить backend/gunicorn, прогреть кэш при необходимости.
 
 ---
 
@@ -551,7 +564,7 @@ open http://localhost:8000/docs
 
 ```python
 # Backend logs with DEBUG level
-LOG_LEVEL=DEBUG uvicorn api_example:app --reload
+LOG_LEVEL=DEBUG uvicorn bybit_options.api.app:app --reload
 ```
 
 ### Performance Metrics
@@ -570,7 +583,7 @@ LOG_LEVEL=DEBUG uvicorn api_example:app --reload
 1. Check if backend is running: `curl http://localhost:8000/`
 2. Verify API URL in `frontend/src/services/api.ts`
 3. Check browser console for CORS errors
-4. Ensure CORS is configured in `api_example.py`
+4. Ensure CORS is configured in `bybit_options/api/app.py`
 
 ### WebSocket disconnections
 
