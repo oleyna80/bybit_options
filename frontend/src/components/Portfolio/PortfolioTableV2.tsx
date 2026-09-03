@@ -196,7 +196,7 @@ const PortfolioTableV2: React.FC = () => {
                 );
               })}
             </tbody>
-            <tfoot className="text-sm text-gray-300">
+            <tfoot className="text-sm text-gray-900">
               <tr>
                 <td colSpan={10} className="px-3 py-2 text-right font-medium">Aggregate Greeks:</td>
                 <td className="px-3 py-2 text-right">{aggregateGreeks.delta.toFixed(4)}</td>

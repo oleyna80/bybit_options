@@ -1,24 +1,90 @@
-from pybit.unified_trading import HTTP
-session = HTTP(testnet=False)
+#!/usr/bin/env python3
+"""
+Test script for Bybit options IV testing.
+This script creates and executes test_iv.py to test Bybit API connectivity.
+"""
 
-# Проверить market data для конкретного опциона
-response = session.get_tickers(
-    category="option",
-    symbol="BTC-30JAN26-78000-P-USDT"  # актуальный тикер из твоих позиций
-)
+import os
+import subprocess
+import sys
+import tempfile
 
-print("\n=== MARKET DATA ===")
-if response['result']['list']:
-    ticker = response['result']['list'][0]
-    print(f"Symbol: {ticker['symbol']}")
-    print(f"Mark Price: {ticker.get('markPrice')}")
-    print(f"Mark IV: {ticker.get('markIv')}")
-    print(f"Delta: {ticker.get('delta')}")
-    print(f"Vega: {ticker.get('vega')}")
-    print(f"Gamma: {ticker.get('gamma')}")
-    print(f"Theta: {ticker.get('theta')}")
-    print(f"Bid: {ticker.get('bid1Price')}")
-    print(f"Ask: {ticker.get('ask1Price')}")
-    print("\nAll available fields:", ticker.keys())
-else:
-    print("No data - try another symbol")
+def create_test_iv_script():
+    """Create the test_iv.py script content."""
+    return '''import asyncio
+from bybit_options.services.bybit_connector import BybitConnector
+from config import get_config
+
+async def test():
+    config = get_config()
+    connector = BybitConnector(config.bybit.api_key, config.bybit.api_secret, testnet=False)
+    
+    # Инициализировать сессию
+    await connector._init_session()
+    
+    # Запрос с правильным параметром
+    result = await connector.get_tickers(category='option', base_coin='BTC')
+    
+    if result:
+        first = result[0]
+        print(f"Symbol: {first.get('symbol')}")
+        print(f"markIv: {first.get('markIv')}")
+        print(f"bidIv: {first.get('bidIv')}")
+        print(f"askIv: {first.get('askIv')}")
+        print(f"\\nTotal options: {len(result)}")
+    else:
+        print("No tickers returned")
+    
+    await connector.close()
+
+if __name__ == "__main__":
+    asyncio.run(test())
+'''
+
+def main():
+    """Main function to create and execute test script."""
+    print("Creating test_iv.py...")
+    
+    # Create the test script
+    script_content = create_test_iv_script()
+    
+    # Write to file
+    with open('test_iv.py', 'w', encoding='utf-8') as f:
+        f.write(script_content)
+    
+    print("Created test_iv.py")
+    print("Running test_iv.py...")
+    
+    # Execute the script
+    try:
+        result = subprocess.run(
+            [sys.executable, 'test_iv.py'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        print("Output:")
+        print(result.stdout)
+        
+        if result.stderr:
+            print("Errors:")
+            print(result.stderr)
+        
+        print("Test completed successfully")
+        return 0
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Test failed with exit code {e.returncode}")
+        print("Stdout:", e.stdout)
+        print("Stderr:", e.stderr)
+        return 1
+    except FileNotFoundError:
+        print("Error: Python interpreter not found")
+        return 1
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

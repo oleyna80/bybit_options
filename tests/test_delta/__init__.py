@@ -1,0 +1,1 @@
+"""Delta collectors tests."""

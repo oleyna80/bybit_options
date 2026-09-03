@@ -167,9 +167,10 @@ class ApiClient {
     const params = new URLSearchParams();
     if (filters.base_coin) params.append('base_coin', filters.base_coin);
     if (filters.expiry) params.append('expiry', filters.expiry);
-    if (filters.option_type) params.append('option_type', filters.option_type);
-    if (filters.min_strike) params.append('min_strike', filters.min_strike.toString());
-    if (filters.max_strike) params.append('max_strike', filters.max_strike.toString());
+    if (filters.option_type) params.append('option_type', String(filters.option_type));
+    if (filters.sort_by) params.append('sort_by', filters.sort_by);
+    if (filters.sort_order) params.append('sort_order', filters.sort_order);
+    if (filters.limit) params.append('limit', filters.limit.toString());
     
     const query = params.toString();
     const endpoint = `/options-board${query ? `?${query}` : ''}`;
@@ -190,21 +191,23 @@ class ApiClient {
     return this.request<PositionModel[]>(endpoint, {}, cacheKey, 10 * 1000);
   }
 
-  // Payoff Chart - TEMPORARILY DISABLED (endpoint not implemented in backend)
-  async getPayoffChart(): Promise<ApiResponse<PayoffChartResponse>> {
-    // TODO: Implement backend endpoint for payoff chart
-    // For now, return mock data or throw error
-    throw new ApiError('Payoff chart endpoint not implemented in backend');
-    
-    // Uncomment when backend endpoint is available:
-    // const params = new URLSearchParams();
-    // if (daysToExpiry) params.append('days_to_expiry', daysToExpiry.toString());
-    // if (priceRangePct) params.append('price_range_pct', priceRangePct.toString());
-    //
-    // const query = params.toString();
-    // const endpoint = `/payoff-chart${query ? `?${query}` : ''}`;
-    // const cacheKey = this.generateCacheKey('payoff-chart', { daysToExpiry, priceRangePct });
-    // return this.request<PayoffChartResponse>(endpoint, {}, cacheKey, 30 * 1000);
+  // Payoff Chart
+  async getPayoffChart(params?: {
+    base_coin?: string;
+    days_to_expiry?: number;
+    price_range_pct?: number;
+    include_theta?: boolean;
+  }): Promise<ApiResponse<PayoffChartResponse>> {
+    const queryParams = new URLSearchParams();
+    if (params?.base_coin) queryParams.append('base_coin', params.base_coin);
+    if (params?.days_to_expiry !== undefined) queryParams.append('days_to_expiry', params.days_to_expiry.toString());
+    if (params?.price_range_pct !== undefined) queryParams.append('price_range_pct', params.price_range_pct.toString());
+    if (params?.include_theta !== undefined) queryParams.append('include_theta', String(params.include_theta));
+
+    const query = queryParams.toString();
+    const endpoint = `/payoff-chart${query ? `?${query}` : ''}`;
+    const cacheKey = this.generateCacheKey('payoff-chart', params || {});
+    return this.request<PayoffChartResponse>(endpoint, {}, cacheKey, 30 * 1000);
   }
 
   // Trade Log - TEMPORARILY DISABLED (endpoint not implemented in backend)
